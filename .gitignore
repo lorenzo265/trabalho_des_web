@@ -1,0 +1,34 @@
+# segredos e credenciais — nunca versionar
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+storageState*.json
+session-state*.json
+
+# capturas da plataforma (podem conter dados pessoais)
+*.har
+trace.zip
+docs/recon/raw/
+packages/scraper/fixtures/**/raw/
+
+# dependências e builds
+node_modules/
+.next/
+dist/
+build/
+coverage/
+playwright-report/
+test-results/
+.turbo/
+
+# Dart / Flutter
+.dart_tool/
+.packages
+.flutter-plugins*
+
+# SO / editor
+.DS_Store
+.idea/
+.vscode/
