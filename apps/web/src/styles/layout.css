@@ -1,0 +1,70 @@
+/* ---------- Casca do app: celular primeiro, sidebar a partir de 900px ---------- */
+.shell { min-height: 100dvh; }
+.sidebar { display: none; }
+
+.topbar {
+  position: sticky; top: 0; z-index: 20; min-height: var(--topbar-h);
+  background: var(--navy-800); color: #fff; display: flex; align-items: center; gap: 8px;
+  padding: env(safe-area-inset-top) 12px 0 16px;
+}
+.topbar-title { flex: 1; min-width: 0; font-size: 1.0625rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.topbar .btn-ghost { color: #fff; }
+.topbar .btn-ghost:hover { background: rgb(255 255 255 / .14); }
+.topbar-back { margin-left: -8px; }
+
+.main { padding: 16px 16px calc(var(--nav-h) + 100px + env(safe-area-inset-bottom)); max-width: var(--content-w); margin: 0 auto; width: 100%; }
+.page { display: grid; gap: 20px; }
+
+.bottomnav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 30; display: grid; grid-template-columns: repeat(5, 1fr);
+  background: var(--surface); border-top: 1px solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom); min-height: calc(var(--nav-h) + env(safe-area-inset-bottom));
+}
+.bottomnav a {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: var(--nav-h);
+  font-size: .6875rem; font-weight: 600; color: var(--text-muted); text-decoration: none;
+}
+.bottomnav a:hover { text-decoration: none; }
+.bottomnav a.active { color: var(--primary); }
+.bottomnav a.active svg { stroke-width: 2.4; }
+
+.fab {
+  position: fixed; right: 16px; bottom: calc(var(--nav-h) + 16px + env(safe-area-inset-bottom)); z-index: 25;
+  display: inline-flex; align-items: center; gap: 8px; height: 52px; padding: 0 20px; border-radius: 999px;
+  background: var(--primary); color: var(--on-primary); font-weight: 700; box-shadow: var(--shadow); text-decoration: none; border: 0;
+}
+.fab:hover { text-decoration: none; background: var(--primary-hover); }
+
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.2rem; letter-spacing: -.01em; }
+.brand-tile { width: 36px; height: 36px; border-radius: 11px; background: #dbeafe; color: var(--navy-800); display: grid; place-items: center; flex: none; }
+
+.avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); font-weight: 800; display: grid; place-items: center; flex: none; font-size: .9rem; }
+
+@media (min-width: 900px) {
+  .shell { display: grid; grid-template-columns: var(--sidebar-w) minmax(0, 1fr); }
+  .sidebar {
+    display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0; height: 100dvh;
+    background: var(--navy-800); color: #fff; padding: 22px 14px 16px;
+  }
+  .sidebar .brand { padding: 0 8px 18px; }
+  .nav-link {
+    display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 12px;
+    color: rgb(255 255 255 / .78); font-weight: 600; font-size: .9375rem; text-decoration: none;
+  }
+  .nav-link:hover { background: rgb(255 255 255 / .1); color: #fff; text-decoration: none; }
+  .nav-link.active { background: rgb(255 255 255 / .16); color: #fff; }
+  .nav-sep { margin: 14px 12px 6px; font-size: .6875rem; letter-spacing: .08em; text-transform: uppercase; color: rgb(255 255 255 / .5); font-weight: 700; }
+  .sidebar-user { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 12px 8px 0; border-top: 1px solid rgb(255 255 255 / .14); }
+  .sidebar-user .avatar { background: rgb(255 255 255 / .16); color: #fff; }
+  .sidebar-user .btn-ghost { color: #fff; margin-left: auto; }
+  .sidebar-user .btn-ghost:hover { background: rgb(255 255 255 / .14); }
+
+  .topbar { position: static; background: transparent; color: var(--text); padding: 28px 32px 0; max-width: calc(var(--content-w) + 64px); margin: 0 auto; width: 100%; }
+  .topbar .btn-ghost { color: var(--text); }
+  .topbar .btn-ghost:hover { background: var(--surface-2); }
+  .topbar-title { font-size: 1.625rem; font-weight: 800; letter-spacing: -.01em; }
+  .main { padding: 18px 32px 48px; }
+  .bottomnav, .fab { display: none; }
+  .only-mobile { display: none !important; }
+}
+@media (max-width: 899px) { .only-desktop { display: none !important; } }

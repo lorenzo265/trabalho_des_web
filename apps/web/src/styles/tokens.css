@@ -1,0 +1,82 @@
+/* Design tokens do EduMind (identidade do protótipo: azul-marinho + azul + laranja). */
+:root {
+  --navy-900: #12263f;
+  --navy-800: #1b3a5f;
+  --navy-700: #24497a;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-soft: #e8f0fe;
+  --on-primary: #ffffff;
+  --orange: #d97706;
+
+  --bg: #f3f5f9;
+  --surface: #ffffff;
+  --surface-2: #f7f9fc;
+  --text: #0f1b2d;
+  --text-muted: #5b6b82;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+
+  --success: #047857;
+  --success-soft: #e3f6ee;
+  --danger: #b91c1c;
+  --danger-soft: #fdecec;
+  --warning: #92400e;
+  --warning-soft: #fef3c7;
+  --info-soft: #e0efff;
+
+  --bubble-user: #eef1f6;
+  --bubble-ai: #e4efff;
+
+  --radius-sm: 10px;
+  --radius: 16px;
+  --radius-lg: 22px;
+  --shadow-sm: 0 1px 2px rgb(16 36 64 / 0.06);
+  --shadow: 0 8px 24px rgb(16 36 64 / 0.09);
+  --focus: 0 0 0 3px rgb(37 99 235 / 0.35);
+
+  --nav-h: 64px;
+  --topbar-h: 56px;
+  --sidebar-w: 248px;
+  --content-w: 1080px;
+
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Inter, 'Helvetica Neue', Arial, system-ui, sans-serif;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --navy-900: #0b1626;
+    --navy-800: #11233b;
+    --navy-700: #1a3454;
+    --primary: #4f8df7;
+    --primary-hover: #6ba0fa;
+    --primary-soft: #16294a;
+    --on-primary: #08111f;
+    --orange: #f59e0b;
+
+    --bg: #0c1422;
+    --surface: #131d2f;
+    --surface-2: #17233a;
+    --text: #e8eef8;
+    --text-muted: #9fb0c8;
+    --border: #243350;
+    --border-strong: #35476a;
+
+    --success: #34d399;
+    --success-soft: #0f2d25;
+    --danger: #f87171;
+    --danger-soft: #341a1d;
+    --warning: #fbbf24;
+    --warning-soft: #33280d;
+    --info-soft: #14284a;
+
+    --bubble-user: #1c2940;
+    --bubble-ai: #172f55;
+
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.35);
+    --shadow: 0 8px 24px rgb(0 0 0 / 0.4);
+    --focus: 0 0 0 3px rgb(79 141 247 / 0.45);
+    color-scheme: dark;
+  }
+}

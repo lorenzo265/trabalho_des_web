@@ -230,6 +230,31 @@ sequenceDiagram
   `portal` (a faculdade real — depende do **reconhecimento da plataforma**, ver §9, D1/D2).
 - Rodar de novo **não duplica** (chave `externalId`); itens que mudam de prazo/horário são atualizados.
 
+### 8.1 Decisão: Playwright é a melhor ferramenta?
+
+Para um portal acadêmico **com login e JavaScript**, Playwright é uma boa escolha (espera automática, lida com cookies/SSO,
+TypeScript nativo, grava HAR para investigar a plataforma). Mas **não é sempre a melhor**; a ordem de preferência é:
+
+| # | Opção | Quando usar | Custo |
+|---|---|---|---|
+| 1 | API oficial / token / feed `.ics` / RSS da plataforma | Se a faculdade oferecer (Moodle, Canvas etc.) | Mais estável e barato |
+| 2 | Endpoints JSON internos (`fetch` com o cookie de sessão) | Se o portal é uma SPA que já chama JSON | Leve, sem navegador |
+| 3 | HTTP + parser de HTML (ex.: cheerio) | Se as páginas são renderizadas no servidor | Leve |
+| 4 | **Playwright** (navegador real) | Login com JavaScript/SSO, conteúdo montado no cliente, login assistido | Mais pesado, mais lento |
+
+**Plano:** manter Playwright como padrão (é o que já está pronto e testado) e usá-lo no **reconhecimento** do portal real.
+Se o reconhecimento mostrar endpoints JSON, o adaptador passa a usar Playwright só para o login e `fetch` para os dados.
+Puppeteer/Selenium não trazem vantagem aqui; Crawlee/Scrapy são para rastreamento em larga escala (excesso para o PoC).
+
+### 8.2 Do portal mock para o portal oficial
+
+O **mock** continua útil: permite testar e **demonstrar sem credenciais** e sem depender da faculdade estar no ar. Para
+apontar para o portal oficial só falta o adaptador `apps/scraper/src/adapters/portal.ts` (hoje um esqueleto) e
+`SCRAPER_SOURCE=portal`. Para escrevê-lo é preciso **ver o portal**: URL, tipo de login (usuário/senha, SSO, MFA/captcha) e
+o HTML (ou HAR sanitizado) de 3 páginas: login, lista de disciplinas e uma disciplina. Credenciais **nunca** no chat nem
+no repositório: ficam em variáveis de ambiente (`PORTAL_URL`, `PORTAL_USER`, `PORTAL_PASSWORD`) e o domínio precisa estar
+liberado no acesso de rede do ambiente.
+
 ## 9. Decisões em aberto (defaults adotados)
 
 | # | Dúvida | Default no PoC |
