@@ -1,0 +1,23 @@
+{
+  "name": "edumind",
+  "private": true,
+  "type": "module",
+  "description": "EduMind — Organizador de Estudos com IA (PoC local). Projeto G2.",
+  "workspaces": ["apps/*", "packages/*"],
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "dev": "concurrently -k -n api,web,portal -c blue,green,yellow \"npm run dev -w @edumind/api\" \"npm run dev -w @edumind/web\" \"npm run portal -w @edumind/scraper\"",
+    "dev:api": "npm run dev -w @edumind/api",
+    "dev:web": "npm run dev -w @edumind/web",
+    "dev:portal": "npm run portal -w @edumind/scraper",
+    "seed": "npm run seed -w @edumind/api",
+    "scrape": "npm run scrape -w @edumind/scraper",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "build": "npm run build -w @edumind/web"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0",
+    "typescript": "^5.6.0"
+  }
+}

@@ -32,3 +32,14 @@ test-results/
 .DS_Store
 .idea/
 .vscode/
+
+# PoC local
+data/
+*.db
+*.db-shm
+*.db-wal
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
+apps/web/dist/
