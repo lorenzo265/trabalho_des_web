@@ -90,16 +90,35 @@ describe('sincronização', () => {
     expect(count(t, 'lessons') + count(s, 'lessons')).toBe(3);
   });
 
-  it('vincula a uma disciplina manual de mesmo nome (sem caixa) em vez de duplicar', async () => {
+  it('vincula a uma disciplina manual de mesmo nome (sem caixa) e já converge para os dados da faculdade', async () => {
     const { agent } = await signup(t.app);
-    const manual = (await agent.post('/api/subjects').send({ name: 'desenvolvimento móvel', color: '#DB2777' })).body;
+    const manual = (await agent.post('/api/subjects').send({ name: 'desenvolvimento móvel', professor: 'Alguém', room: 'Sala X', color: '#DB2777' })).body;
     await agent.post('/api/sync');
     await t.services.waitForSyncs();
     const subjects = (await agent.get('/api/subjects')).body.items;
     expect(subjects).toHaveLength(2);
     const linked = subjects.find((s: any) => s.id === manual.id);
-    expect(linked).toMatchObject({ color: '#DB2777', source: 'manual', professor: 'Prof. João' }); // preenche professor/sala vazios
+    expect(linked).toMatchObject({ color: '#DB2777', source: 'manual', professor: 'Prof. João', room: 'Sala 311 · Prédio 01' }); // a faculdade é a fonte da verdade
     expect(subjects.find((s: any) => s.id !== manual.id).source).toBe('scraper');
+    // Já convergiu: o 2º sync não altera nada (nem a disciplina vinculada).
+    await agent.post('/api/sync');
+    await t.services.waitForSyncs();
+    expect((await agent.get('/api/sync')).body.last.stats).toMatchObject({ created: 0, updated: 0 });
+  });
+
+  it('se a faculdade não informar professor/sala, mantém o último valor conhecido', async () => {
+    let result: ScrapeResult = sampleScrape();
+    const s = makeApp({ scrape: async () => result });
+    const { agent } = await signup(s.app);
+    await agent.post('/api/sync');
+    await s.services.waitForSyncs();
+    result = sampleScrape();
+    result.courses[0]!.professor = null;
+    result.courses[0]!.room = null;
+    await agent.post('/api/sync');
+    await s.services.waitForSyncs();
+    expect((await agent.get('/api/subjects')).body.items[0]).toMatchObject({ professor: 'Prof. João', room: 'Sala 311 · Prédio 01' });
+    expect((await agent.get('/api/sync')).body.last.stats).toMatchObject({ updated: 0 });
   });
 
   it('cada usuário importa para a própria conta', async () => {

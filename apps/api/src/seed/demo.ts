@@ -139,7 +139,7 @@ interface SubjectSeed {
 const done = (title: string) => ({ title, status: 'concluido' as const });
 const SUBJECTS: SubjectSeed[] = [
   {
-    code: 'mov', name: 'Desenvolvimento Móvel', professor: 'Prof. João', room: 'Sala 311 · Prédio 01', color: '#2563EB',
+    code: 'mov', name: 'Desenvolvimento de Dispositivos Móveis', professor: 'Prof. João', room: 'Sala 311 · Prédio 01', color: '#2563EB',
     topics: [
       done('Requisitos funcionais e não funcionais'),
       done('Protótipos de telas'),
@@ -149,7 +149,7 @@ const SUBJECTS: SubjectSeed[] = [
     ],
   },
   {
-    code: 'ia', name: 'Inteligência Artificial', professor: 'Profa. Carla', room: 'Prédio 1', color: '#D97706',
+    code: 'ia', name: 'Inteligência Artificial', professor: 'Profa. Carla', room: 'Sala 105 · Prédio 1', color: '#D97706',
     topics: [
       done('O que é IA'), done('Agentes inteligentes'), done('Busca em espaço de estados'),
       done('Busca informada (A*)'), done('Lógica proposicional'),
@@ -162,7 +162,7 @@ const SUBJECTS: SubjectSeed[] = [
     ],
   },
   {
-    code: 'bd', name: 'Banco de Dados', professor: 'Prof. Marcos', room: 'Sala 205 · Prédio 02', color: '#059669',
+    code: 'bd', name: 'Banco de Dados', professor: 'Prof. Marcos', room: 'Laboratório 2 · Prédio 3', color: '#059669',
     topics: [
       done('Modelo entidade-relacionamento'), done('SQL básico'),
       { title: 'Normalização', status: 'estudando', due: 2 },
@@ -172,7 +172,7 @@ const SUBJECTS: SubjectSeed[] = [
     ],
   },
   {
-    code: 'es', name: 'Engenharia de Software', professor: 'Profa. Ana', room: 'Sala 118 · Prédio 03', color: '#7C3AED',
+    code: 'es', name: 'Engenharia de Software', professor: 'Profa. Renata', room: 'Sala 208 · Prédio 2', color: '#7C3AED',
     topics: [done('Ciclo de vida do software'), done('Metodologias ágeis'), done('UML'), done('Testes de software')],
   },
 ];

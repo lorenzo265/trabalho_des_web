@@ -40,10 +40,12 @@ export function importScrape(db: Db, userId: number, result: ScrapeResult, nowIs
       );
 
       if (subject) {
-        // A faculdade é a fonte da verdade para nome, professor e sala.
+        // A faculdade é a fonte da verdade para nome, professor e sala (se ela não informar, mantém o último valor).
         const name = course.name !== subject.name && !subjectNameTaken(db, userId, course.name, subject.id) ? course.name : subject.name;
-        if (name !== subject.name || course.professor !== subject.professor || course.room !== subject.room) {
-          run(db, 'update subjects set name = ?, professor = ?, room = ? where id = ?', name, course.professor, course.room, subject.id);
+        const professor = course.professor ?? subject.professor;
+        const room = course.room ?? subject.room;
+        if (name !== subject.name || professor !== subject.professor || room !== subject.room) {
+          run(db, 'update subjects set name = ?, professor = ?, room = ? where id = ?', name, professor, room, subject.id);
           stats.updated++;
         }
       } else {
@@ -53,12 +55,15 @@ export function importScrape(db: Db, userId: number, result: ScrapeResult, nowIs
           userId, course.name,
         );
         if (byName) {
+          // Mesma regra: ao vincular, professor e sala passam a ser os da faculdade (quando informados).
+          const professor = course.professor ?? byName.professor;
+          const room = course.room ?? byName.room;
           run(
             db,
-            'update subjects set external_id = ?, professor = coalesce(professor, ?), room = coalesce(room, ?) where id = ?',
-            course.externalId, course.professor, course.room, byName.id,
+            'update subjects set external_id = ?, name = ?, professor = ?, room = ? where id = ?',
+            course.externalId, course.name, professor, room, byName.id, // mesmo nome, só a grafia oficial
           );
-          subject = { ...byName, external_id: course.externalId };
+          subject = { ...byName, name: course.name, professor, room, external_id: course.externalId };
           stats.updated++;
         } else {
           const count = one<{ c: number }>(db, 'select count(*) c from subjects where user_id = ?', userId)!.c;

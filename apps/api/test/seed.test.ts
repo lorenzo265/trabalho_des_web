@@ -32,11 +32,11 @@ describe('seed de demonstração', () => {
     expect((await aluno.post('/api/auth/login').send({ email: 'aluno@edumind.local', password: 'aluno12345' })).body.user.name).toBe('Gustavo Peixoto');
 
     const subjects = (await aluno.get('/api/subjects')).body.items;
-    expect(subjects.map((s: any) => s.name)).toEqual(['Banco de Dados', 'Desenvolvimento Móvel', 'Engenharia de Software', 'Inteligência Artificial']);
+    expect(subjects.map((s: any) => s.name)).toEqual(['Banco de Dados', 'Desenvolvimento de Dispositivos Móveis', 'Engenharia de Software', 'Inteligência Artificial']);
     const pct = (name: string) => { const s = subjects.find((x: any) => x.name === name); return Math.round((s.doneCount / s.topicCount) * 100); };
-    expect(pct('Desenvolvimento Móvel')).toBe(80);
+    expect(pct('Desenvolvimento de Dispositivos Móveis')).toBe(80);
     expect(pct('Inteligência Artificial')).toBe(45);
-    expect(subjects.find((s: any) => s.name === 'Desenvolvimento Móvel')).toMatchObject({ professor: 'Prof. João', room: 'Sala 311 · Prédio 01' });
+    expect(subjects.find((s: any) => s.name === 'Desenvolvimento de Dispositivos Móveis')).toMatchObject({ professor: 'Prof. João', room: 'Sala 311 · Prédio 01' });
 
     const week = (await aluno.get('/api/stats/week?today=2026-10-23')).body;
     expect(week.totalMinutes).toBe(14 * 60); // ~14 h na semana corrente, como no protótipo
