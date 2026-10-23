@@ -1,10 +1,6 @@
+import { lazy } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from '../components/layout/AppShell';
-import { AdminLayout } from '../pages/admin/AdminLayout';
-import { AdminAccessLogsPage } from '../pages/admin/AccessLogs';
-import { AdminOverviewPage } from '../pages/admin/Overview';
-import { AdminSessionsPage } from '../pages/admin/Sessions';
-import { AdminUsersPage } from '../pages/admin/Users';
 import { DashboardPage } from '../pages/Dashboard';
 import { LessonsPage } from '../pages/Lessons';
 import { LoginPage } from '../pages/Login';
@@ -13,8 +9,17 @@ import { ProgressPage } from '../pages/Progress';
 import { RegisterPage } from '../pages/Register';
 import { SubjectDetailPage } from '../pages/SubjectDetail';
 import { SubjectsPage } from '../pages/Subjects';
-import { TutorPage } from '../pages/Tutor';
 import { PublicOnly, RequireAdmin, RequireAuth } from './guards';
+
+// Tutor (react-markdown) e Admin só são baixados quando a rota é aberta.
+const lazyNamed = <K extends string>(load: () => Promise<Record<K, React.ComponentType>>, key: K) =>
+  lazy(async () => ({ default: (await load())[key] }));
+const TutorPage = lazyNamed(() => import('../pages/Tutor'), 'TutorPage');
+const AdminLayout = lazyNamed(() => import('../pages/admin/AdminLayout'), 'AdminLayout');
+const AdminOverviewPage = lazyNamed(() => import('../pages/admin/Overview'), 'AdminOverviewPage');
+const AdminUsersPage = lazyNamed(() => import('../pages/admin/Users'), 'AdminUsersPage');
+const AdminAccessLogsPage = lazyNamed(() => import('../pages/admin/AccessLogs'), 'AdminAccessLogsPage');
+const AdminSessionsPage = lazyNamed(() => import('../pages/admin/Sessions'), 'AdminSessionsPage');
 
 export function App() {
   return (

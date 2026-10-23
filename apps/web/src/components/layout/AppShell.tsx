@@ -9,12 +9,13 @@ import {
   Shield,
   UserRound,
 } from 'lucide-react';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth, useUser } from '../../app/auth';
 import { useConfig } from '../../lib/queries';
 import { initials } from '../../lib/color';
 import { storage } from '../../lib/storage';
+import { Spinner } from '../ui/bits';
 import { Tour } from './Tour';
 
 const MAIN_NAV = [
@@ -101,7 +102,9 @@ export function AppShell() {
       </aside>
 
       <div style={{ minWidth: 0 }}>
-        <Outlet />
+        <Suspense fallback={<div style={{ padding: 32 }} role="status" aria-label="Carregando"><Spinner size={24} /></div>}>
+          <Outlet />
+        </Suspense>
       </div>
 
       {!onTutor && (
