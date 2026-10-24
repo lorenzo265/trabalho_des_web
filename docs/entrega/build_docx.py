@@ -8,9 +8,7 @@ from pathlib import Path
 
 from docx import Document
 from docx.enum.table import WD_TABLE_ALIGNMENT
-from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_LINE_SPACING
-from docx.oxml import OxmlElement
-from docx.oxml.ns import qn
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Cm, Pt, RGBColor
 
 BASE = Path(__file__).parent
@@ -33,15 +31,6 @@ def img(path: Path) -> Path:
     if not path.exists():
         raise SystemExit(f"Imagem ausente: {path} (rode `npm run e2e:shots` e o mermaid antes)")
     return path
-
-
-def shade(cell, hex_fill: str) -> None:
-    tc_pr = cell._tc.get_or_add_tcPr()
-    shd = OxmlElement("w:shd")
-    shd.set(qn("w:val"), "clear")
-    shd.set(qn("w:color"), "auto")
-    shd.set(qn("w:fill"), hex_fill)
-    tc_pr.append(shd)
 
 
 def para(doc, text="", bold=False, size=None, color=None, align=None, space_after=6, italic=False):
@@ -93,27 +82,11 @@ def shots_row(doc, items, width_cm):
     doc.add_paragraph().paragraph_format.space_after = Pt(4)
 
 
-def table(doc, header, rows, widths=None):
-    t = doc.add_table(rows=1, cols=len(header))
-    t.style = "Table Grid"
-    for i, h in enumerate(header):
-        c = t.rows[0].cells[i]
-        shade(c, "1B3A5F")
-        run = c.paragraphs[0].add_run(h)
-        run.bold = True
-        run.font.size = Pt(9.5)
-        run.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
-    for row in rows:
-        cells = t.add_row().cells
-        for i, v in enumerate(row):
-            run = cells[i].paragraphs[0].add_run(v)
-            run.font.size = Pt(9.5)
-    if widths:
-        for row in t.rows:
-            for i, w in enumerate(widths):
-                row.cells[i].width = Cm(w)
-    doc.add_paragraph().paragraph_format.space_after = Pt(4)
-    return t
+def heading_new_page(doc, text):
+    """Título de seção que começa em página nova (sem parágrafo de quebra avulso, que pode gerar página em branco)."""
+    h = doc.add_heading(text, level=1)
+    h.paragraph_format.page_break_before = True
+    return h
 
 
 doc = Document()
@@ -139,7 +112,8 @@ para(doc, "Desenvolvimento de Dispositivos Móveis · Universidade La Salle", si
 
 doc.add_heading("1. Equipe", level=1)
 para(doc, "Nome da equipe / do aplicativo: EduMind", bold=True, space_after=6)
-table(doc, ["Integrante", "Matrícula", "Observação"], [list(m) for m in TEAM], widths=[7.5, 3, 6])
+for nome, matricula, obs in TEAM:
+    bullet(doc, nome, f" — matrícula {matricula}" + (f" ({obs})" if obs else ""))
 
 doc.add_heading("2. Categoria do aplicativo", level=1)
 para(
@@ -156,8 +130,7 @@ doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
 caption(doc, "Figura 1 — Divisão do projeto em três frentes: telas, acessos e aulas (scrapers).")
 
 # ------------------------------------------------------------------ telas de acesso
-doc.add_page_break()
-doc.add_heading("3. Telas de acesso do usuário", level=1)
+heading_new_page(doc, "3. Telas de acesso do usuário")
 para(doc, "Interface minimalista: cada tela tem uma tarefa e poucos campos, com ícones padrão e ajuda contextual (botão “?”).", color=MUTED)
 
 doc.add_heading("Tela 1 — Autenticação (Login)", level=2)
@@ -182,8 +155,7 @@ bullet(doc, "Meus acessos: ", "histórico do próprio usuário com data, hora de
 shots_row(doc, [("10-perfil-acessos.png", "Perfil, dispositivos e meus acessos"), ("11-dashboard.png", "Início (conta demo, desktop)")], width_cm=8.0)
 
 # ------------------------------------------------------------------ modelo de dados
-doc.add_page_break()
-doc.add_heading("4. Modelo de dados do acesso e do log", level=1)
+heading_new_page(doc, "4. Modelo de dados do acesso e do log")
 para(
     doc,
     "O acesso do usuário ao app é independente do dispositivo porque a conta (users) é única e cada dispositivo ganha a sua "
@@ -194,16 +166,10 @@ doc.add_picture(str(img(DIAG / "der-acesso.png")), height=Cm(12.3))
 doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
 caption(doc, "Figura 2 — Diagrama entidade-relacionamento: usuários, sessões (uma por dispositivo) e log de acesso.")
 
-table(
-    doc,
-    ["Tabela", "Para que serve", "Pontos de atenção"],
-    [
-        ["users", "Conta do estudante ou administrador (e-mail, nome, papel, ativo/bloqueado).", "Senha guardada só como hash (scrypt). O papel define o acesso à área do administrador."],
-        ["sessions", "Um acesso aberto em um dispositivo (cookie de sessão, dispositivo, IP, validade de 7 dias).", "Só o hash do token é guardado. Encerrar a sessão (logout, desconectar aparelho, bloqueio) preenche revoked_at."],
-        ["access_logs", "Histórico de acessos: nome, data e hora do login, hora do logout, dispositivo e motivo.", "logout_at nulo = em andamento. Nome e e-mail são cópias: o log sobrevive à exclusão da conta."],
-    ],
-    widths=[2.6, 7.2, 7.2],
-)
+para(doc, "Tabelas do modelo", bold=True, space_after=2)
+bullet(doc, "users: ", "conta do estudante ou administrador (e-mail, nome, papel, ativo ou bloqueado). A senha é guardada só como hash (scrypt) e o papel define o acesso à área do administrador.")
+bullet(doc, "sessions: ", "um acesso aberto em um dispositivo (cookie de sessão, dispositivo, IP, validade de 7 dias). Só o hash do token é guardado; encerrar a sessão (logout, desconectar aparelho ou bloqueio) preenche revoked_at.")
+bullet(doc, "access_logs: ", "histórico de acessos, com nome, data e hora do login, hora do logout, dispositivo e motivo. Quando logout_at é nulo, a sessão está em andamento. Nome e e-mail são cópias, então o log sobrevive à exclusão da conta.")
 para(doc, "Regras do log", bold=True, space_after=2)
 bullet(doc, "Todo login bem-sucedido cria 1 sessão e 1 linha de log na mesma transação.")
 bullet(doc, "O logout é gravado uma única vez: saiu do app, sessão expirada, dispositivo desconectado ou encerrada pelo administrador.")
@@ -211,15 +177,13 @@ bullet(doc, "Tentativas de login que falham não geram log (apenas contam no lim
 bullet(doc, "Se o navegador for fechado sem sair, o log fica “em andamento” até a sessão expirar.")
 
 # ------------------------------------------------------------------ fluxograma
-doc.add_page_break()
-doc.add_heading("5. Fluxograma de acesso e registro do log", level=1)
+heading_new_page(doc, "5. Fluxograma de acesso e registro do log")
 doc.add_picture(str(img(DIAG / "fluxo-acesso-log.png")), height=Cm(21))
 doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
 caption(doc, "Figura 3 — Do login ao logout: criação da sessão do dispositivo e registro de data e hora no log.")
 
 # ------------------------------------------------------------------ admin
-doc.add_page_break()
-doc.add_heading("6. Área do administrador", level=1)
+heading_new_page(doc, "6. Área do administrador")
 para(
     doc,
     "Decisão: a área do administrador é incluída no mesmo app web (rota /admin), visível apenas para usuários com papel "
@@ -238,36 +202,21 @@ doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
 caption(doc, "Figura 5 — Visão geral da administração.")
 
 # ------------------------------------------------------------------ demais telas
-doc.add_page_break()
-doc.add_heading("7. Demais telas do protótipo (implementadas)", level=1)
+heading_new_page(doc, "7. Demais telas do protótipo (implementadas)")
 para(doc, "As cinco telas do protótipo de 16/10 já funcionam no PoC, além de Aulas (dados extraídos pelo scraper).", color=MUTED)
 shots_row(
     doc,
     [("07-disciplinas.png", "Tela 3 — Disciplinas"), ("09-progresso.png", "Tela 5 — Progresso"), ("08-disciplina-detalhe.png", "Detalhe da disciplina")],
-    width_cm=3.9,
+    width_cm=3.5,
 )
-shots_row(doc, [("14-tutor.png", "Tela 4 — Professor Tutor IA (desktop)"), ("13-aulas.png", "Aulas sincronizadas (desktop)")], width_cm=7.0)
+shots_row(doc, [("14-tutor.png", "Tela 4 — Professor Tutor IA (desktop)"), ("13-aulas.png", "Aulas sincronizadas (desktop)")], width_cm=6.4)
 
 doc.add_heading("8. Dicas de tela da aula aplicadas", level=1)
-table(
-    doc,
-    ["Dica", "Como foi aplicada"],
-    [
-        ["Telas com muitos recursos confundem no celular", "Uma tarefa por tela e no máximo 5 destinos na navegação inferior."],
-        ["Interface minimalista com chamadas para outras telas", "Cartões que levam ao detalhe; ações secundárias em menus e modais."],
-        ["Telas que precisam de ajuda/treinamento", "Apresentação inicial de 3 passos e botão “?” em todas as telas."],
-        ["Símbolos já consagrados", "Ícones padrão: lixeira para excluir, lápis para editar, olho para mostrar a senha, seta para enviar."],
-        ["Informação rápida e completa", "A tela Início reúne as metas do dia, o progresso por disciplina e as próximas aulas."],
-    ],
-    widths=[6.5, 10.5],
-)
-
-# O parágrafo exigido após a última tabela não pode abrir uma página em branco.
-tail = doc.paragraphs[-1]
-tail.paragraph_format.space_before = Pt(0)
-tail.paragraph_format.space_after = Pt(0)
-tail.paragraph_format.line_spacing_rule = WD_LINE_SPACING.EXACTLY
-tail.paragraph_format.line_spacing = Pt(1)
+bullet(doc, "Telas com muitos recursos confundem no celular: ", "uma tarefa por tela e no máximo 5 destinos na navegação inferior.")
+bullet(doc, "Interface minimalista com chamadas para outras telas: ", "cartões que levam ao detalhe; ações secundárias em menus e modais.")
+bullet(doc, "Telas que precisam de ajuda ou treinamento: ", "apresentação inicial de 3 passos e botão “?” em todas as telas.")
+bullet(doc, "Símbolos já consagrados: ", "ícones padrão, como lixeira para excluir, lápis para editar, olho para mostrar a senha e seta para enviar.")
+bullet(doc, "Informação rápida e completa: ", "a tela Início reúne as metas do dia, o progresso por disciplina e as próximas aulas.")
 
 doc.save(OUT)
 print(f"Gerado: {OUT}")
