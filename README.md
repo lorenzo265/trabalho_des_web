@@ -24,7 +24,14 @@ npm run dev              # api (3001) + web (5173) + portal mock (4010)
 Abra <http://localhost:5173>. Logins de demonstração criados pelo `seed`:
 `aluno@edumind.local` / `aluno12345` e (admin) `admin@edumind.local` / `admin12345`.
 
-Outros comandos: `npm test`, `npm run typecheck`, `npm run scrape` (roda o scraper pela linha de comando).
+Outros comandos: `npm test`, `npm run typecheck`, `npm run scrape` (roda o scraper pela linha de comando),
+`npm run e2e` (teste de ponta a ponta no navegador, com a pilha no ar) e `npm run e2e:shots` (também grava as capturas de tela em `docs/entrega/telas/`).
+
+## Entrega da aula (23/10)
+
+[`docs/entrega/`](docs/entrega/) reúne o documento **ProjetoG2_261023** (`.docx` e `.pdf`), com a equipe, as telas de acesso,
+o modelo de dados do acesso e do log, o fluxograma de acesso e registro do log e a área do administrador. As capturas
+(`telas/`) e os diagramas (`diagramas/`) são gerados por `npm run e2e:shots` e pelos arquivos `.mmd`.
 
 ## Documentação
 

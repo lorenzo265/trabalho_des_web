@@ -1,4 +1,4 @@
-import type { Subject } from '@edumind/contracts';
+import type { Goal, Subject } from '@edumind/contracts';
 import { subjectProgress } from '../lib/subject';
 import { BookOpen, CalendarDays, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
@@ -10,8 +10,9 @@ import { GoalFormModal } from '../components/GoalFormModal';
 import { Empty, ProgressBar, SkeletonList } from '../components/ui/bits';
 import { useToast } from '../components/ui/Toast';
 import { onColor } from '../lib/color';
-import { addDays, formatDateLong, formatHours, todayLocal, weekStartOf } from '../lib/dates';
+import { addDays, capitalize, formatDateLong, formatHours, todayLocal, weekStartOf } from '../lib/dates';
 import { HELP } from '../lib/help';
+import { useOptimisticValue } from '../lib/optimistic';
 import { useAssignments, useGoalMutations, useGoals, useLessons, useSubjects, useWeekStats } from '../lib/queries';
 
 function SubjectTile({ s }: { s: Subject }) {
@@ -25,13 +26,42 @@ function SubjectTile({ s }: { s: Subject }) {
   );
 }
 
+function GoalRow({ goal: g }: { goal: Goal }) {
+  const { update, remove } = useGoalMutations();
+  const toast = useToast();
+  const [done, setDone, clearDone] = useOptimisticValue(g.done);
+  return (
+    <li className={`checkrow ${done ? 'done' : ''}`}>
+      <input
+        type="checkbox"
+        className="checkbox"
+        checked={done}
+        aria-label={`Concluir meta: ${g.description}`}
+        onChange={(e) => {
+          setDone(e.target.checked);
+          update.mutate({ id: g.id, patch: { done: e.target.checked } }, { onError: (err) => toast.error(err), onSettled: clearDone });
+        }}
+      />
+      <div className="checkrow-text">
+        <div>{g.description}</div>
+        <div className="row small muted" style={{ gap: 6 }}>
+          <SubjectDot color={g.subjectColor} /> {g.subjectName}
+          {g.targetMinutes ? ` · ${g.targetMinutes} min` : ''}
+        </div>
+      </div>
+      <button className="btn btn-ghost btn-icon btn-sm" aria-label={`Excluir meta: ${g.description}`} onClick={() => remove.mutate(g.id, { onError: (err) => toast.error(err) })}>
+        <Trash2 size={16} />
+      </button>
+    </li>
+  );
+}
+
 export function DashboardPage() {
   const user = useUser();
   const toast = useToast();
   const today = todayLocal();
   const subjects = useSubjects();
   const goals = useGoals(today);
-  const { update, remove } = useGoalMutations();
   const lessons = useLessons(today, addDays(today, 7));
   const assignments = useAssignments();
   const stats = useWeekStats(weekStartOf(today), today);
@@ -43,8 +73,8 @@ export function DashboardPage() {
 
   return (
     <Page title={`Olá, ${user.name.split(' ')[0]}!`} help={HELP.dashboard}>
-      <p className="muted" style={{ marginTop: -8, textTransform: 'capitalize' }}>
-        {formatDateLong(today)}
+      <p className="muted" style={{ marginTop: -8 }}>
+        {capitalize(formatDateLong(today))}
       </p>
 
       <div className="grid-2">
@@ -96,25 +126,7 @@ export function DashboardPage() {
             ) : (
               <ul>
                 {goals.data!.map((g) => (
-                  <li key={g.id} className={`checkrow ${g.done ? 'done' : ''}`}>
-                    <input
-                      type="checkbox"
-                      className="checkbox"
-                      checked={g.done}
-                      aria-label={`Concluir meta: ${g.description}`}
-                      onChange={(e) => update.mutate({ id: g.id, patch: { done: e.target.checked } }, { onError: (err) => toast.error(err) })}
-                    />
-                    <div className="checkrow-text">
-                      <div>{g.description}</div>
-                      <div className="row small muted" style={{ gap: 6 }}>
-                        <SubjectDot color={g.subjectColor} /> {g.subjectName}
-                        {g.targetMinutes ? ` · ${g.targetMinutes} min` : ''}
-                      </div>
-                    </div>
-                    <button className="btn btn-ghost btn-icon btn-sm" aria-label={`Excluir meta: ${g.description}`} onClick={() => remove.mutate(g.id, { onError: (err) => toast.error(err) })}>
-                      <Trash2 size={16} />
-                    </button>
-                  </li>
+                  <GoalRow key={g.id} goal={g} />
                 ))}
               </ul>
             )}

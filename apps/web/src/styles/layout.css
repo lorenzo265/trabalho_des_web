@@ -13,7 +13,7 @@
 .topbar-back { margin-left: -8px; }
 
 .main { padding: 16px 16px calc(var(--nav-h) + 100px + env(safe-area-inset-bottom)); max-width: var(--content-w); margin: 0 auto; width: 100%; }
-.page { display: grid; gap: 20px; }
+.page { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); }
 
 .bottomnav {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 30; display: grid; grid-template-columns: repeat(5, 1fr);

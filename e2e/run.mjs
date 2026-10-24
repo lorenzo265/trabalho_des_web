@@ -19,14 +19,19 @@ const stamp = Date.now().toString(36);
 const NEW_USER = { name: 'Ana Teste', email: `ana.${stamp}@teste.local`, password: 'senhaForte123' };
 
 const results = [];
+let activePage = null;
+const FAIL_DIR = process.env.FAIL_DIR ?? '/tmp';
 async function step(name, fn) {
   try {
     await fn();
     results.push({ name, ok: true });
     console.log(`  ok   ${name}`);
   } catch (e) {
-    results.push({ name, ok: false, error: String(e?.message ?? e).split('\n')[0] });
-    console.log(`  FAIL ${name}\n       ${String(e?.message ?? e).split('\n')[0]}`);
+    const lines = String(e?.message ?? e).split('\n').filter(Boolean).slice(0, 4).join('\n       ');
+    results.push({ name, ok: false, error: lines });
+    console.log(`  FAIL ${name}\n       ${lines}`);
+    const file = join(FAIL_DIR, `e2e-fail-${results.length}.png`);
+    await activePage?.screenshot({ path: file }).then(() => console.log(`       captura: ${file}`)).catch(() => {});
   }
 }
 
@@ -39,7 +44,9 @@ async function newPage(kind = 'mobile') {
       ? { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo', userAgent: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36' }
       : { viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo' },
   );
+  ctx.setDefaultTimeout(12_000);
   const page = await ctx.newPage();
+  activePage = page;
   page.on('console', (m) => m.type() === 'error' && consoleErrors.push(`[${kind}] ${m.text()}`));
   page.on('pageerror', (e) => consoleErrors.push(`[${kind}] pageerror: ${e.message}`));
   return { ctx, page };
@@ -54,15 +61,19 @@ async function shot(page, name) {
 async function login(page, creds) {
   await page.goto(`${BASE}/login`);
   await page.getByLabel('E-mail').fill(creds.email);
-  await page.getByLabel('Senha').fill(creds.password);
+  await page.getByLabel('Senha', { exact: true }).fill(creds.password);
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await page.getByRole('heading', { level: 1 }).first().waitFor();
   await page.waitForURL((u) => !u.pathname.startsWith('/login'));
+  await page.locator('.shell').waitFor();
 }
 
 async function skipTour(page) {
   const skip = page.getByRole('button', { name: 'Pular' });
-  if (await skip.isVisible().catch(() => false)) await skip.click();
+  const shown = await skip.waitFor({ timeout: 1500 }).then(() => true, () => false);
+  if (shown) {
+    await skip.click();
+    await page.getByRole('dialog').waitFor({ state: 'detached' });
+  }
 }
 
 // ---------------------------------------------------------------- fluxo 1: acesso (celular)
@@ -80,7 +91,7 @@ console.log('\n[1] Acesso do usuário (celular 390×844)');
   });
   await step('login inválido mostra erro genérico', async () => {
     await page.getByLabel('E-mail').fill(DEMO.email);
-    await page.getByLabel('Senha').fill('senhaErrada1');
+    await page.getByLabel('Senha', { exact: true }).fill('senhaErrada1');
     await page.getByRole('button', { name: 'Entrar', exact: true }).click();
     await page.getByRole('alert').filter({ hasText: /incorret/i }).waitFor();
     await shot(page, '02-login-erro');
@@ -92,7 +103,7 @@ console.log('\n[1] Acesso do usuário (celular 390×844)');
     await shot(page, '03-cadastro');
     await page.getByLabel('Nome').fill(NEW_USER.name);
     await page.getByLabel('E-mail').fill(NEW_USER.email);
-    await page.getByLabel('Senha').fill(NEW_USER.password);
+    await page.getByLabel('Senha', { exact: true }).fill(NEW_USER.password);
     await page.getByRole('button', { name: 'Criar conta', exact: true }).click();
     await page.getByRole('heading', { name: 'Olá, Ana!' }).waitFor();
   });
@@ -150,7 +161,7 @@ console.log('\n[1] Acesso do usuário (celular 390×844)');
     await page.getByRole('button', { name: 'Parar e salvar' }).click();
     await page.getByText(/Sessão registrada/).waitFor();
     await page.getByRole('heading', { name: 'Por disciplina' }).waitFor();
-    await page.getByText('Desenvolvimento Móvel').first().waitFor();
+    await page.getByRole('listitem').filter({ hasText: 'Desenvolvimento Móvel' }).first().waitFor();
     await shot(page, '09-progresso');
   });
   await step('logout leva ao login e a rota volta a ser protegida', async () => {

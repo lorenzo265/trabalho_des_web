@@ -12,6 +12,7 @@ import { useToast } from '../components/ui/Toast';
 import { onColor } from '../lib/color';
 import { addDays, todayLocal } from '../lib/dates';
 import { HELP } from '../lib/help';
+import { useOptimisticValue } from '../lib/optimistic';
 import { useAssignments, useLessons, useSubject, useSubjectMutations, useTopicMutations, useTopics } from '../lib/queries';
 
 const STATUS_OPTIONS: { value: TopicStatus; label: string }[] = [
@@ -23,15 +24,20 @@ const STATUS_OPTIONS: { value: TopicStatus; label: string }[] = [
 function TopicRow({ topic, subjectId }: { topic: Topic; subjectId: number }) {
   const { update, remove } = useTopicMutations(subjectId);
   const toast = useToast();
+  const [status, setStatus, clearStatus] = useOptimisticValue<TopicStatus>(topic.status);
   const onError = (err: unknown) => toast.error(err);
+  const changeStatus = (next: TopicStatus) => {
+    setStatus(next);
+    update.mutate({ id: topic.id, patch: { status: next } }, { onError, onSettled: clearStatus });
+  };
   return (
-    <li className={`checkrow ${topic.status === 'concluido' ? 'done' : ''}`}>
+    <li className={`checkrow ${status === 'concluido' ? 'done' : ''}`}>
       <input
         type="checkbox"
         className="checkbox"
-        checked={topic.status === 'concluido'}
+        checked={status === 'concluido'}
         aria-label={`Concluir tópico: ${topic.title}`}
-        onChange={(e) => update.mutate({ id: topic.id, patch: { status: e.target.checked ? 'concluido' : 'pendente' } }, { onError })}
+        onChange={(e) => changeStatus(e.target.checked ? 'concluido' : 'pendente')}
       />
       <div className="checkrow-text">
         <div>{topic.title}</div>
@@ -39,8 +45,8 @@ function TopicRow({ topic, subjectId }: { topic: Topic; subjectId: number }) {
           <select
             className="select select-sm"
             aria-label={`Status do tópico ${topic.title}`}
-            value={topic.status}
-            onChange={(e) => update.mutate({ id: topic.id, patch: { status: e.target.value as TopicStatus } }, { onError })}
+            value={status}
+            onChange={(e) => changeStatus(e.target.value as TopicStatus)}
           >
             {STATUS_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
@@ -53,7 +59,8 @@ function TopicRow({ topic, subjectId }: { topic: Topic; subjectId: number }) {
             className="input select-sm"
             style={{ width: 'auto' }}
             aria-label={`Prazo do tópico ${topic.title}`}
-            value={topic.dueDate ?? ''}
+            defaultValue={topic.dueDate ?? ''}
+            key={topic.dueDate ?? 'sem-prazo'}
             onChange={(e) => update.mutate({ id: topic.id, patch: { dueDate: e.target.value || null } }, { onError })}
           />
         </div>

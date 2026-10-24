@@ -8,7 +8,7 @@ from pathlib import Path
 
 from docx import Document
 from docx.enum.table import WD_TABLE_ALIGNMENT
-from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_LINE_SPACING
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
@@ -190,7 +190,7 @@ para(
     "própria sessão (sessions). O log de acesso (access_logs) registra uma linha por login, com o nome do usuário, a data e "
     "hora do login e a hora do logout.",
 )
-doc.add_picture(str(img(DIAG / "der-acesso.png")), height=Cm(15.5))
+doc.add_picture(str(img(DIAG / "der-acesso.png")), height=Cm(12.3))
 doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
 caption(doc, "Figura 2 — Diagrama entidade-relacionamento: usuários, sessões (uma por dispositivo) e log de acesso.")
 
@@ -230,10 +230,10 @@ bullet(doc, "Visão geral: ", "usuários, sessões ativas, logins de hoje e grá
 bullet(doc, "Usuários: ", "busca, mudança de papel, bloqueio/ativação e exclusão (com salvaguardas: o admin não bloqueia nem exclui a si mesmo, nem o último administrador).")
 bullet(doc, "Log de acessos: ", "nome, data, hora de login, hora de logout, duração, dispositivo e método; filtros por usuário e período; exportação em CSV.")
 bullet(doc, "Sessões ativas: ", "dispositivos conectados agora, com opção de encerrar à força.")
-doc.add_picture(str(img(TELAS / "16-admin-log-acessos.png")), width=Cm(16))
+doc.add_picture(str(img(TELAS / "16-admin-log-acessos.png")), width=Cm(12.5))
 doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
 caption(doc, "Figura 4 — Log de acessos na área do administrador.")
-doc.add_picture(str(img(TELAS / "15-admin-visao-geral.png")), width=Cm(16))
+doc.add_picture(str(img(TELAS / "15-admin-visao-geral.png")), width=Cm(12.5))
 doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
 caption(doc, "Figura 5 — Visão geral da administração.")
 
@@ -244,9 +244,9 @@ para(doc, "As cinco telas do protótipo de 16/10 já funcionam no PoC, além de 
 shots_row(
     doc,
     [("07-disciplinas.png", "Tela 3 — Disciplinas"), ("09-progresso.png", "Tela 5 — Progresso"), ("08-disciplina-detalhe.png", "Detalhe da disciplina")],
-    width_cm=5.0,
+    width_cm=3.9,
 )
-shots_row(doc, [("14-tutor.png", "Tela 4 — Professor Tutor IA (desktop)"), ("13-aulas.png", "Aulas sincronizadas (desktop)")], width_cm=8.0)
+shots_row(doc, [("14-tutor.png", "Tela 4 — Professor Tutor IA (desktop)"), ("13-aulas.png", "Aulas sincronizadas (desktop)")], width_cm=7.0)
 
 doc.add_heading("8. Dicas de tela da aula aplicadas", level=1)
 table(
@@ -261,6 +261,13 @@ table(
     ],
     widths=[6.5, 10.5],
 )
+
+# O parágrafo exigido após a última tabela não pode abrir uma página em branco.
+tail = doc.paragraphs[-1]
+tail.paragraph_format.space_before = Pt(0)
+tail.paragraph_format.space_after = Pt(0)
+tail.paragraph_format.line_spacing_rule = WD_LINE_SPACING.EXACTLY
+tail.paragraph_format.line_spacing = Pt(1)
 
 doc.save(OUT)
 print(f"Gerado: {OUT}")

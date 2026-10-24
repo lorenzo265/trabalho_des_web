@@ -27,8 +27,8 @@ ul { margin: 0; padding: 0; list-style: none; }
 .muted { color: var(--text-muted); }
 .small { font-size: 0.8125rem; }
 .nowrap { white-space: nowrap; }
-.stack { display: grid; gap: 16px; }
-.stack-sm { display: grid; gap: 8px; }
+.stack { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+.stack-sm { display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr); }
 .row { display: flex; align-items: center; gap: 12px; }
 .row-wrap { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .spacer { flex: 1; }

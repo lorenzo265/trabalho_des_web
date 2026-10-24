@@ -79,12 +79,13 @@ export const useTopics = (subjectId: number) =>
 
 export function useTopicMutations(subjectId: number) {
   const qc = useQueryClient();
-  const refresh = () => {
-    void qc.invalidateQueries({ queryKey: ['topics', subjectId] });
-    void qc.invalidateQueries({ queryKey: ['subjects'] });
-    void qc.invalidateQueries({ queryKey: ['subject', subjectId] });
-    void qc.invalidateQueries({ queryKey: ['stats'] });
-  };
+  const refresh = () =>
+    Promise.all([
+      qc.invalidateQueries({ queryKey: ['topics', subjectId] }),
+      qc.invalidateQueries({ queryKey: ['subjects'] }),
+      qc.invalidateQueries({ queryKey: ['subject', subjectId] }),
+      qc.invalidateQueries({ queryKey: ['stats'] }),
+    ]);
   return {
     create: useMutation({
       mutationFn: (input: TopicInput) => api.post(`/subjects/${subjectId}/topics`, input, topicSchema),
@@ -92,7 +93,7 @@ export function useTopicMutations(subjectId: number) {
     }),
     update: useMutation({
       mutationFn: ({ id, patch }: { id: number; patch: TopicPatch }) => api.patch(`/topics/${id}`, patch, topicSchema),
-      onSuccess: refresh,
+      onSettled: refresh,
     }),
     remove: useMutation({ mutationFn: (id: number) => api.del(`/topics/${id}`), onSuccess: refresh }),
   };
@@ -107,15 +108,12 @@ export const useGoals = (date: string) =>
 
 export function useGoalMutations() {
   const qc = useQueryClient();
-  const refresh = () => {
-    void qc.invalidateQueries({ queryKey: ['goals'] });
-    void qc.invalidateQueries({ queryKey: ['stats'] });
-  };
+  const refresh = () => Promise.all([qc.invalidateQueries({ queryKey: ['goals'] }), qc.invalidateQueries({ queryKey: ['stats'] })]);
   return {
     create: useMutation({ mutationFn: (i: GoalInput) => api.post('/goals', i, goalSchema), onSuccess: refresh }),
     update: useMutation({
       mutationFn: ({ id, patch }: { id: number; patch: GoalPatch }) => api.patch(`/goals/${id}`, patch, goalSchema),
-      onSuccess: refresh,
+      onSettled: refresh,
     }),
     remove: useMutation({ mutationFn: (id: number) => api.del(`/goals/${id}`), onSuccess: refresh }),
   };

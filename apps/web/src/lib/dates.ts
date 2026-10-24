@@ -115,3 +115,5 @@ export function relativeTime(iso: string, now = new Date()): string {
   if (d < 7) return `há ${d} dias`;
   return formatDateBR(iso).slice(0, 5);
 }
+
+export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);

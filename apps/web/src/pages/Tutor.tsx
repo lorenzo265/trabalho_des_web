@@ -110,8 +110,14 @@ export function TutorPage() {
     endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [persisted.length, streaming?.assistant, streaming?.userText, streaming?.error]);
 
-  // Ao trocar de conversa, limpa o estado de streaming anterior.
+  // Ao trocar de conversa, limpa o estado de streaming anterior — exceto quando foi esta própria página
+  // que acabou de criar a conversa (nova conversa → /tutor/:id) e já está transmitindo a resposta.
+  const ownNavigation = useRef<number | null>(null);
   useEffect(() => {
+    if (threadId !== null && ownNavigation.current === threadId) {
+      ownNavigation.current = null;
+      return;
+    }
     abortRef.current?.abort();
     setStreaming(null);
   }, [threadId]);
@@ -126,6 +132,7 @@ export function TutorPage() {
       if (tid === null) {
         const t = await create.mutateAsync({ subjectId: draftSubject, title: null });
         tid = t.id;
+        ownNavigation.current = tid;
         navigate(`/tutor/${tid}`, { replace: true });
       }
       const ctrl = new AbortController();

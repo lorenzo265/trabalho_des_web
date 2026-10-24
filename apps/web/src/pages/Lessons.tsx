@@ -1,5 +1,5 @@
 import { CalendarDays, ChevronLeft, ChevronRight, ClipboardList, RefreshCw } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { AssignmentRow, LessonRow } from '../components/items';
 import { Page } from '../components/layout/Page';
@@ -15,20 +15,26 @@ function SyncCard() {
   const config = useConfig();
   const qc = useQueryClient();
   const toast = useToast();
-  const running = status.data?.current?.status === 'running' || start.isPending;
+  // Id da execução disparada por este clique; some quando o servidor reporta que ela terminou.
+  const [startedId, setStartedId] = useState<number | null>(null);
+  const serverRunning = status.data?.current?.status === 'running';
+  const running = serverRunning || start.isPending || startedId !== null;
   const last = status.data?.last;
-  const prevRunning = useRef(false);
 
-  // Quando uma sincronização termina, recarrega o que ela pode ter alterado.
   useEffect(() => {
-    if (prevRunning.current && !running) {
-      refreshAfterSync(qc);
-      const l = status.data?.last;
-      if (l?.status === 'ok' && l.stats) toast.show(`Sincronizado: ${l.stats.lessons} aulas e ${l.stats.assignments} trabalhos.`);
-      if (l?.status === 'error') toast.show(l.error ?? 'A sincronização falhou.', 'error');
-    }
-    prevRunning.current = running;
-  }, [running, qc, status.data, toast]);
+    if (startedId === null || !last || last.id !== startedId || last.status === 'running') return;
+    setStartedId(null);
+    refreshAfterSync(qc);
+    if (last.status === 'ok' && last.stats) toast.show(`Sincronizado: ${last.stats.lessons} aulas e ${last.stats.assignments} trabalhos.`);
+    if (last.status === 'error') toast.show(last.error ?? 'A sincronização falhou.', 'error');
+  }, [startedId, last, qc, toast]);
+
+  // Segurança: se o servidor nunca reportar o fim, libera o botão.
+  useEffect(() => {
+    if (startedId === null) return;
+    const t = setTimeout(() => setStartedId(null), 180_000);
+    return () => clearTimeout(t);
+  }, [startedId]);
 
   const source = (status.data?.source ?? config.data?.scraperSource) === 'mock' ? 'Portal de demonstração (local)' : 'Portal da faculdade';
 
@@ -62,7 +68,7 @@ function SyncCard() {
         <button
           className="btn btn-primary"
           disabled={running}
-          onClick={() => start.mutate(undefined, { onError: (e) => toast.error(e) })}
+          onClick={() => start.mutate(undefined, { onSuccess: (run) => setStartedId(run.id), onError: (e) => toast.error(e) })}
         >
           {running ? <Spinner /> : <RefreshCw size={18} />} {running ? 'Sincronizando…' : 'Sincronizar'}
         </button>

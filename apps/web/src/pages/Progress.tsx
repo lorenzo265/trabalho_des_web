@@ -343,7 +343,7 @@ export function ProgressPage() {
             )}
             {s && (
               <div className="row small muted" style={{ marginTop: 14, gap: 6, borderTop: '1px solid var(--border)', paddingTop: 12 }}>
-                <Clock size={14} aria-hidden /> {s.subjectsCompleted} de {s.subjectsTotal} disciplinas concluídas · {s.goalsTodayDone}/{s.goalsToday} metas de hoje
+                <Clock size={14} aria-hidden /> {s.subjectsCompleted} de {s.subjectsTotal} {s.subjectsTotal === 1 ? 'disciplina concluída' : 'disciplinas concluídas'} · {s.goalsTodayDone}/{s.goalsToday} metas de hoje
               </div>
             )}
           </section>

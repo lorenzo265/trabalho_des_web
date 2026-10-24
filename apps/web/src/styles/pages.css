@@ -30,7 +30,7 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .
 .tile-pct { font-size: .8125rem; opacity: .92; font-weight: 600; }
 
 /* ---------- Itens de lista (aulas, trabalhos) ---------- */
-.items { display: grid; gap: 4px; }
+.items { display: grid; gap: 4px; grid-template-columns: minmax(0, 1fr); }
 .item { display: flex; align-items: center; gap: 12px; padding: 10px 4px; position: relative; }
 .item + .item { border-top: 1px solid var(--border); }
 .item-bar { width: 4px; align-self: stretch; border-radius: 4px; flex: none; }
@@ -41,7 +41,7 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .
 .sync-card { border-left: 4px solid var(--primary); }
 
 /* ---------- Disciplinas (Tela 3) ---------- */
-.subject-grid { display: grid; gap: 12px; }
+.subject-grid { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 760px) { .subject-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .subject-card { display: flex; gap: 14px; padding: 14px 16px 14px 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); color: var(--text); text-decoration: none; overflow: hidden; transition: transform .1s, box-shadow .15s; }
 .subject-card:hover { text-decoration: none; transform: translateY(-1px); box-shadow: var(--shadow); }
@@ -86,10 +86,11 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .
 .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 8px; }
 .chip { border: 1px solid var(--border-strong); background: var(--surface); border-radius: 999px; padding: 8px 14px; font-size: .8125rem; color: var(--text); }
 .chip:hover { background: var(--primary-soft); border-color: var(--primary); }
-.thread-list { display: grid; gap: 4px; }
-.thread { display: flex; align-items: center; gap: 4px; border-radius: 12px; border: 1px solid transparent; }
+.thread-list { display: grid; gap: 4px; grid-template-columns: minmax(0, 1fr); }
+.thread { display: flex; align-items: center; gap: 4px; border-radius: 12px; border: 1px solid transparent; min-width: 0; }
 .thread.active { background: var(--primary-soft); border-color: var(--primary); }
-.thread-main { flex: 1; min-width: 0; text-align: left; background: none; border: 0; padding: 8px 10px; display: grid; gap: 2px; }
+.thread-main { flex: 1; min-width: 0; text-align: left; background: none; border: 0; padding: 8px 10px; display: grid; gap: 2px; grid-template-columns: minmax(0, 1fr); }
+.thread-main .row { min-width: 0; flex-wrap: nowrap; overflow: hidden; white-space: nowrap; }
 
 /* ---------- Progresso (Tela 5) ---------- */
 .hero-stat { background: linear-gradient(135deg, var(--navy-800), var(--navy-700)); color: #fff; border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow); }
@@ -111,3 +112,5 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .
 .device-icon { width: 40px; height: 40px; border-radius: 12px; background: var(--primary-soft); color: var(--primary); display: grid; place-items: center; flex: none; }
 .filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
 .filters .field { flex: 1 1 140px; }
+
+.tutor-side { min-width: 0; overflow-x: hidden; }
