@@ -1,0 +1,23 @@
+{
+  "name": "@edumind/scraper",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "portal": "tsx --env-file-if-exists=../../.env src/portal-mock/server.ts",
+    "scrape": "tsx --env-file-if-exists=../../.env src/cli.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@edumind/contracts": "*",
+    "playwright-core": "1.63.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "vitest": "^5.0.0"
+  }
+}

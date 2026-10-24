@@ -1,0 +1,10 @@
+{
+  "name": "@edumind/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Schemas zod e tipos compartilhados entre web, api e scraper (fonte da verdade dos formatos).",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "typecheck": "tsc -p tsconfig.json" },
+  "dependencies": { "zod": "^4.0.0" }
+}

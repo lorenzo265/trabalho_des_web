@@ -1,0 +1,41 @@
+erDiagram
+  USERS ||--o{ SESSIONS : "abre (uma por dispositivo)"
+  USERS ||--o{ ACCESS_LOGS : "gera"
+  SESSIONS ||--o| ACCESS_LOGS : "registrada em"
+
+  USERS {
+    int id PK
+    text email UK "login (sem diferenciar maiúsculas)"
+    text name "nome exibido no log"
+    text password_hash "scrypt; nunca a senha"
+    text role "user | admin"
+    int is_active "0 = bloqueado pelo admin"
+    int weekly_goal_minutes
+    text created_at
+    text last_login_at
+  }
+  SESSIONS {
+    int id PK
+    int user_id FK
+    text token_hash UK "sha256 do token do cookie"
+    text device "ex.: Chrome · Android"
+    text ip
+    text created_at
+    text last_seen_at
+    text expires_at "7 dias"
+    text revoked_at "preenchido ao encerrar"
+    text revoke_reason "manual | revoked | admin"
+  }
+  ACCESS_LOGS {
+    int id PK
+    int user_id FK "vira nulo se a conta for excluida"
+    text user_name "copia do nome no login"
+    text user_email "copia do e-mail no login"
+    int session_id FK
+    text method "password | google"
+    text device
+    text ip
+    text login_at "data e hora do login"
+    text logout_at "hora do logout (nulo = em andamento)"
+    text logout_reason "manual | expired | revoked | admin"
+  }

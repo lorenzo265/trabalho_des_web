@@ -1,0 +1,17 @@
+flowchart TD
+  A([Usuário abre o app]) --> B{Cookie de sessão<br/>válido?}
+  B -- sim --> APP([Entra no app<br/>mesmos dados em qualquer dispositivo])
+  B -- não --> L[Tela de Login ou Cadastro]
+  L --> C[Envia e-mail e senha]
+  C --> D{Muitas tentativas<br/>seguidas?}
+  D -- sim --> E[/Erro 429: aguarde/]
+  D -- não --> F{Credenciais corretas<br/>e conta ativa?}
+  F -- não --> G[/Erro genérico<br/>nada entra no log/]
+  F -- sim --> H[Cria a SESSÃO do dispositivo<br/>e abre a linha do LOG<br/>com data e hora do login]
+  H --> I[Grava cookie HttpOnly] --> APP
+  APP --> J{Como o acesso termina?}
+  J -- "Toca em Sair" --> K[Revoga a sessão<br/>LOG: hora do logout, motivo manual]
+  J -- "Passam 7 dias" --> M[Varredura fecha o LOG<br/>logout = validade, motivo expired]
+  J -- "Usuário desconecta outro aparelho" --> N[LOG: motivo revoked]
+  J -- "Admin encerra ou bloqueia" --> O[LOG: motivo admin]
+  J -- "Fecha o navegador sem sair" --> P[LOG continua em andamento<br/>até a sessão expirar]

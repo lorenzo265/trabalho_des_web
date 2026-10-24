@@ -1,0 +1,22 @@
+flowchart LR
+  subgraph F1["Frente 1 · Telas (apps/web)"]
+    UI["React + Vite<br/>mobile-first"]
+  end
+  subgraph F2["Frente 2 · Acessos (apps/api)"]
+    AUTH["Cadastro, login<br/>sessão por dispositivo"]
+    LOG["Log de acesso"]
+    ADM["Área do administrador"]
+  end
+  subgraph F3["Frente 3 · Aulas (apps/scraper)"]
+    SCR["Scraper Playwright"]
+    PORT["Portal da faculdade<br/>(mock em desenvolvimento)"]
+  end
+  CORE["apps/api · núcleo<br/>disciplinas, metas, estudo, tutor IA"]
+  DB[("SQLite")]
+  UI <-->|"HTTP /api + cookie"| AUTH
+  UI <--> CORE
+  AUTH --> LOG --> DB
+  ADM --> DB
+  CORE --> DB
+  SCR --> PORT
+  SCR -->|"ScrapeResult"| CORE
