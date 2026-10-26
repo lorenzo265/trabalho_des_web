@@ -33,6 +33,12 @@ Outros comandos: `npm test`, `npm run typecheck`, `npm run scrape` (roda o scrap
 o modelo de dados do acesso e do log, o fluxograma de acesso e registro do log e a área do administrador. As capturas
 (`telas/`) e os diagramas (`diagramas/`) são gerados por `npm run e2e:shots` e pelos arquivos `.mmd`.
 
+## Proposta do trabalho final (26/10)
+
+[`docs/proposta/`](docs/proposta/) tem a proposta em PDF (`PropostaTrabalhoFinal_EduMind.pdf`: grupo, identidade visual, escopo,
+responsáveis, cronograma e objetivos), o logo (`logo-edumind.svg`/`.png`) e o texto para o fórum (`post-forum.txt`).
+Para regerar o PDF depois de editar `proposta.html`: `node docs/proposta/build_pdf.mjs`.
+
 ## Documentação
 
 - [Estrutura e tech stack do PoC](docs/superpowers/specs/2026-10-23-poc-estrutura-stack.md) ← **comece aqui**
