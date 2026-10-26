@@ -1,0 +1,11 @@
+Grupo EduMind — tema do trabalho final
+
+Integrantes: Gustavo Peixoto Siriacov, Tales Ivaniski Galina, Lorenzo Ruggini Lindemann e Eduardo Cassel da Costa.
+
+Tema: EduMind, um organizador de estudos com IA integrada. A natureza do trabalho é a implementação de software (nenhum hardware será construído ou adquirido).
+
+Vamos evoluir o protótipo entregue em 23/10 até uma versão final: um aplicativo web responsivo e instalável no celular (PWA), hospedado online, com Professor Tutor com IA real (OpenRouter), login com Google e sincronização das aulas da faculdade por scraper (esta última parte condicionada à plataforma e aos termos de uso).
+
+Cada integrante lidera uma parte: Gustavo (aulas e sincronização), Tales (telas e PWA), Lorenzo (acessos, login Google e hospedagem) e Eduardo (tutor IA, testes e documentação).
+
+A proposta completa, com identidade visual, cronograma e objetivos, está no PDF da entrega.

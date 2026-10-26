@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>EduMind — Proposta do Trabalho Final</title>
+<style>
+  :root {
+    --navy-900: #12263f;
+    --navy-800: #1b3a5f;
+    --navy-700: #24497a;
+    --primary: #2563eb;
+    --sky: #60a5fa;
+    --amber: #fbbf24;
+    --orange: #d97706;
+    --soft: #f3f5f9;
+    --soft-blue: #e8f0fe;
+    --text: #0f1b2d;
+    --muted: #5b6b82;
+    --border: #e2e8f0;
+    --border-strong: #cbd5e1;
+    --success: #047857;
+    --c-gustavo: #d97706;
+    --c-tales: #0f8a7a;
+    --c-lorenzo: #2563eb;
+    --c-eduardo: #7c3aed;
+    --c-todos: #64748b;
+  }
+  @page { size: A4; }
+  * { box-sizing: border-box; }
+  html { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif; color: var(--text); font-size: 9.4pt; line-height: 1.45; }
+  body { margin: 0; }
+  .page { break-after: page; }
+  .page:last-child { break-after: auto; }
+
+  /* ---------- capa ---------- */
+  .hero { display: flex; align-items: center; gap: 22px; background: var(--navy-800); color: #fff; border-radius: 16px; padding: 16px 22px; }
+  .hero svg { width: 70px; height: 70px; flex: none; }
+  .eyebrow { font-size: 8.5pt; letter-spacing: .14em; text-transform: uppercase; color: var(--sky); font-weight: 600; }
+  .hero h1 { margin: 0; font-size: 27pt; line-height: 1.1; letter-spacing: -.02em; font-weight: 800; }
+  .hero h1 span { color: var(--sky); }
+  .tagline { margin: 4px 0 0; font-size: 11pt; color: #dbe7f7; }
+  .meta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin: 12px 0 4px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .meta div { padding: 8px 12px; border-left: 1px solid var(--border); }
+  .meta div:first-child { border-left: 0; }
+  .meta small { display: block; font-size: 7.5pt; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+  .meta b { font-size: 9pt; font-weight: 600; }
+
+  /* ---------- títulos ---------- */
+  h2 { display: flex; align-items: center; gap: 10px; margin: 16px 0 6px; font-size: 13.5pt; color: var(--navy-800); letter-spacing: -.01em; }
+  h2 .n { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 8px; background: var(--navy-800); color: #fff; font-size: 10.5pt; font-weight: 700; }
+  h3 { margin: 11px 0 4px; font-size: 10.5pt; color: var(--navy-700); }
+  p { margin: 0 0 7px; }
+  .lead { font-size: 10.4pt; }
+  .muted { color: var(--muted); }
+  ul { margin: 0 0 7px; padding-left: 17px; }
+  li { margin-bottom: 2px; }
+  li::marker { color: var(--primary); }
+
+  /* ---------- tabelas ---------- */
+  table { width: 100%; border-collapse: collapse; margin: 4px 0 8px; font-size: 9pt; }
+  th { text-align: left; background: var(--soft-blue); color: var(--navy-800); font-weight: 600; font-size: 8.4pt; padding: 5px 9px; border-bottom: 1px solid var(--border-strong); }
+  td { padding: 5px 9px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr { break-inside: avoid; }
+  td.strong { font-weight: 600; }
+  .tag { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 7.8pt; font-weight: 600; background: var(--soft-blue); color: var(--navy-700); white-space: nowrap; }
+  .tag.warn { background: #fef3c7; color: #92400e; }
+  .tag.ok { background: #e3f6ee; color: var(--success); }
+
+  /* ---------- identidade ---------- */
+  .identity { display: grid; grid-template-columns: 124px 1fr; gap: 14px; align-items: center; border: 1px solid var(--border); border-radius: 14px; padding: 10px 14px; background: var(--soft); }
+  .identity .logo { display: grid; place-items: center; }
+  .identity .logo svg { width: 104px; height: 104px; filter: drop-shadow(0 6px 10px rgb(16 36 64 / .18)); }
+  .swatches { display: flex; gap: 8px; margin: 6px 0 6px; }
+  .sw { flex: 1; border-radius: 10px; overflow: hidden; border: 1px solid var(--border-strong); background: #fff; }
+  .sw i { display: block; height: 26px; }
+  .sw span { display: block; padding: 3px 7px 4px; font-size: 7.6pt; line-height: 1.25; color: var(--muted); }
+  .sw b { display: block; color: var(--text); font-size: 8pt; }
+
+  /* ---------- cartões ---------- */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .card { border: 1px solid var(--border); border-radius: 12px; padding: 7px 11px; background: #fff; break-inside: avoid; }
+  .card h4 { margin: 0 0 3px; font-size: 9.6pt; color: var(--navy-800); display: flex; align-items: center; gap: 7px; }
+  .card p, .card ul { margin: 0; font-size: 8.8pt; color: #2b3a50; }
+  .card ul { padding-left: 15px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .check { width: 14px; height: 14px; flex: none; }
+
+  .callout { border-left: 4px solid var(--primary); background: var(--soft-blue); border-radius: 0 10px 10px 0; padding: 7px 12px; margin: 6px 0 0; font-size: 9.2pt; }
+  .callout.amber { border-color: var(--amber); background: #fffbeb; }
+
+  /* ---------- cronograma ---------- */
+  .gantt { table-layout: fixed; font-size: 8.5pt; }
+  .gantt th.w { text-align: center; width: 58px; }
+  .gantt th.w small { display: block; font-weight: 500; color: var(--muted); font-size: 7pt; }
+  .gantt td { padding: 3px 6px; }
+  .gantt td.who { width: 66px; font-size: 8pt; color: var(--muted); }
+  .gantt td.c { padding: 2px 2px; text-align: center; border-left: 1px solid var(--border); }
+  .gantt td.c.on b { display: block; border-radius: 6px; color: #fff; font-size: 7.6pt; line-height: 17px; height: 17px; }
+  .g-gustavo { background: var(--c-gustavo); } .g-tales { background: var(--c-tales); } .g-lorenzo { background: var(--c-lorenzo); }
+  .g-eduardo { background: var(--c-eduardo); } .g-todos { background: var(--c-todos); }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 8pt; color: var(--muted); margin: 2px 0 6px; }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  .resp { border-top: 4px solid; }
+  .resp .who { font-size: 8pt; color: var(--muted); margin-bottom: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ===================================================== PÁGINA 1 -->
+<section class="page">
+  <header class="hero">
+    <svg viewBox="0 0 64 64" role="img" aria-label="Logo EduMind">
+      <rect width="64" height="64" rx="16" fill="#12263f" stroke="#2f5b94" stroke-width="1"/>
+      <path d="M32 14 8 26l24 12 24-12-24-12Z" fill="#60a5fa"/>
+      <path d="M18 33v10c0 4 6.3 8 14 8s14-4 14-8V33l-14 7-14-7Z" fill="#fff"/>
+      <rect x="52" y="27" width="3" height="16" rx="1.5" fill="#fbbf24"/>
+    </svg>
+    <div>
+      <div class="eyebrow">Proposta do Trabalho Final</div>
+      <h1>Edu<span>Mind</span></h1>
+      <p class="tagline">Organizador de estudos com IA integrada — versão final do Projeto G2</p>
+    </div>
+  </header>
+
+  <div class="meta">
+    <div><small>Disciplina</small><b>Desenvolvimento de Dispositivos Móveis</b></div>
+    <div><small>Instituição</small><b>Universidade La Salle</b></div>
+    <div><small>Data da proposta</small><b>26/10/2026</b></div>
+    <div><small>Natureza</small><b>Implementação de software</b></div>
+  </div>
+
+  <h2><span class="n">1</span>Dados do grupo</h2>
+
+  <table>
+    <thead><tr><th style="width:34%">Integrante</th><th style="width:14%">Matrícula</th><th>Parte sob responsabilidade</th></tr></thead>
+    <tbody>
+      <tr><td class="strong">Gustavo Peixoto Siriacov</td><td>202411977</td><td>Aulas e sincronização com a faculdade <span class="tag">envio no LEX</span></td></tr>
+      <tr><td class="strong">Tales Ivaniski Galina</td><td>202510926</td><td>Telas, experiência de uso e app instalável (PWA)</td></tr>
+      <tr><td class="strong">Lorenzo Ruggini Lindemann</td><td>202511046</td><td>Acessos (login e Google) e hospedagem online</td></tr>
+      <tr><td class="strong">Eduardo Cassel da Costa</td><td>202513138</td><td>Professor Tutor IA, testes e documentação</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Nome do grupo e do aplicativo: <b>EduMind</b></h3>
+  <p><b>Edu</b> de educação e <b>Mind</b> de mente: um parceiro que organiza a cabeça do estudante antes da prova.
+     Lema do grupo: <i>“Estudar com plano, não no improviso.”</i></p>
+
+  <h3>Identidade visual</h3>
+  <div class="identity">
+    <div class="logo">
+      <svg viewBox="0 0 64 64" role="img" aria-label="Logo EduMind">
+        <rect width="64" height="64" rx="16" fill="#1b3a5f"/>
+        <path d="M32 14 8 26l24 12 24-12-24-12Z" fill="#60a5fa"/>
+        <path d="M18 33v10c0 4 6.3 8 14 8s14-4 14-8V33l-14 7-14-7Z" fill="#fff"/>
+        <rect x="52" y="27" width="3" height="16" rx="1.5" fill="#fbbf24"/>
+      </svg>
+    </div>
+    <div>
+      <p style="margin-bottom:4px"><b>Logo:</b> um capelo de formatura com borla dourada. Representa o estudo e a conquista,
+         em uma forma simples que funciona como ícone de aplicativo no celular.</p>
+      <div class="swatches">
+        <div class="sw"><i style="background:#1b3a5f"></i><span><b>Azul-marinho</b>#1B3A5F · foco</span></div>
+        <div class="sw"><i style="background:#2563eb"></i><span><b>Azul principal</b>#2563EB · ações</span></div>
+        <div class="sw"><i style="background:#60a5fa"></i><span><b>Azul-céu</b>#60A5FA · IA</span></div>
+        <div class="sw"><i style="background:#fbbf24"></i><span><b>Âmbar</b>#FBBF24 · conquista</span></div>
+      </div>
+      <p class="muted" style="margin:0;font-size:8.6pt">Tipografia: Inter (interface limpa, boa leitura em telas pequenas). Os arquivos do logo estão no repositório em <code>docs/proposta/</code>.</p>
+    </div>
+  </div>
+
+  <h2><span class="n">2</span>Proposta</h2>
+  <h3>O que será feito e qual é a natureza do trabalho</h3>
+  <p class="lead">Trata-se de uma <b>implementação de software</b> (nenhum hardware será construído ou adquirido). O grupo vai
+     evoluir o protótipo do EduMind, entregue na aula de 23/10, até uma <b>versão final utilizável</b>: um aplicativo web
+     responsivo (<i>mobile-first</i>), <b>instalável no celular e hospedado online</b>, para o aluno organizar disciplinas,
+     metas e tópicos, tirar dúvidas com um <b>Professor Tutor com IA</b> e acompanhar as aulas da faculdade.</p>
+  <div class="callout"><b>Problema que resolve:</b> prazos, aulas, materiais e notas ficam espalhados em lugares diferentes, e o
+     estudo acaba sem plano. O EduMind reúne tudo em um só lugar e responde, todo dia, “o que eu estudo agora?”.</div>
+</section>
+
+<!-- ===================================================== PÁGINA 2 -->
+<section class="page">
+  <h3 style="margin-top:0">Ponto de partida: o que já está pronto (protótipo de 23/10)</h3>
+  <div class="grid2">
+    <div class="card">
+      <h4><svg class="check" viewBox="0 0 16 16"><circle cx="8" cy="8" r="8" fill="#047857"/><path d="m4.5 8.3 2.3 2.3 4.7-4.9" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>Telas (React + Vite)</h4>
+      <p>Login, painel do dia, disciplinas e tópicos, Tutor IA, progresso, aulas e perfil.</p>
+    </div>
+    <div class="card">
+      <h4><svg class="check" viewBox="0 0 16 16"><circle cx="8" cy="8" r="8" fill="#047857"/><path d="m4.5 8.3 2.3 2.3 4.7-4.9" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>Acessos (Node + Express + SQLite)</h4>
+      <p>Sessão por dispositivo, log de login/logout e área do administrador com CSV.</p>
+    </div>
+    <div class="card">
+      <h4><svg class="check" viewBox="0 0 16 16"><circle cx="8" cy="8" r="8" fill="#047857"/><path d="m4.5 8.3 2.3 2.3 4.7-4.9" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>Aulas (Playwright)</h4>
+      <p>Scraper somente leitura de disciplinas, aulas e trabalhos, apontado para um portal de demonstração.</p>
+    </div>
+    <div class="card">
+      <h4><svg class="check" viewBox="0 0 16 16"><circle cx="8" cy="8" r="8" fill="#047857"/><path d="m4.5 8.3 2.3 2.3 4.7-4.9" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>Qualidade</h4>
+      <p>Testes automatizados (Vitest) e um teste ponta a ponta no navegador.</p>
+    </div>
+  </div>
+
+  <h3>O que será entregue de novo (escopo do trabalho final)</h3>
+  <table>
+    <thead><tr><th style="width:22%">Entrega</th><th style="width:34%">Situação hoje</th><th>Resultado esperado</th></tr></thead>
+    <tbody>
+      <tr><td class="strong">1. Professor Tutor com IA real</td>
+          <td>Cliente OpenRouter com streaming já existe, mas roda só em <i>modo demonstração</i> (sem chave).</td>
+          <td>Respostas reais por disciplina, histórico por conversa e limite de uso para controlar o custo.</td></tr>
+      <tr><td class="strong">2. Login com Google</td>
+          <td>Botão desabilitado (“em breve”).</td>
+          <td>Entrar com a conta Google (OAuth), registrando o método no log de acesso.</td></tr>
+      <tr><td class="strong">3. App instalável e online</td>
+          <td>Funciona só em <code>localhost</code>.</td>
+          <td>PWA (ícone, instalação na tela inicial) hospedado com HTTPS, acessível de qualquer dispositivo.</td></tr>
+      <tr><td class="strong">4. Aulas da faculdade reais <span class="tag warn">condicional</span></td>
+          <td>Adaptador do portal real é só um esqueleto; a plataforma ainda não foi reconhecida.</td>
+          <td>Reconhecer a plataforma e escrever o adaptador, se os termos de uso permitirem. Senão, mantém o portal de demonstração e registra a limitação.</td></tr>
+      <tr><td class="strong">5. Fechamento</td>
+          <td>Documento de 23/10 (acessos e log).</td>
+          <td>Relatório final com diagramas atualizados, vídeo curto de demonstração e apresentação à turma.</td></tr>
+    </tbody>
+  </table>
+  <p class="muted" style="font-size:8.8pt"><b>Fora do escopo:</b> notificações <i>push</i>, geração de trabalhos acadêmicos pela IA (integridade
+     acadêmica) e operação em escala para muitos usuários.</p>
+
+  <h3>O que será usado ou adquirido</h3>
+  <table>
+    <thead><tr><th style="width:36%">Item</th><th>Para que serve</th><th style="width:22%">Custo</th></tr></thead>
+    <tbody>
+      <tr><td class="strong">Notebooks e celulares dos integrantes</td><td>Desenvolvimento e testes em dispositivos reais</td><td>já possuídos</td></tr>
+      <tr><td class="strong">TypeScript, Node 22, React, Vite, Express, SQLite, Playwright, Vitest; GitHub</td><td>Stack do protótipo (mantida) e repositório com revisão de código</td><td>gratuito</td></tr>
+      <tr><td class="strong">OpenRouter (modelo Claude Haiku)</td><td>Respostas do Professor Tutor</td><td>pago por uso, teto de US$ 5</td></tr>
+      <tr><td class="strong">Google Cloud (credenciais OAuth)</td><td>Login com Google</td><td>gratuito</td></tr>
+      <tr><td class="strong">Hospedagem em nuvem (PaaS)</td><td>Colocar o app no ar com HTTPS</td><td>gratuito ou baixo custo (escolha na semana 1)</td></tr>
+    </tbody>
+  </table>
+  <p class="muted" style="font-size:8.8pt;margin:0">Nenhum componente de hardware será adquirido. Sem chave da OpenRouter o tutor continua funcionando em modo demonstração, o que protege a apresentação de falhas de rede ou de crédito.</p>
+</section>
+
+<!-- ===================================================== PÁGINA 3 -->
+<section class="page">
+  <h2 style="margin-top:0"><span class="n">3</span>Definição das tarefas</h2>
+  <p>O grupo inteiro responde pelo trabalho e por todas as partes dele. Para que todos participem, cada integrante <b>lidera uma parte</b>
+     e revisa o código das outras por <i>pull request</i> no GitHub.</p>
+
+  <div class="grid2">
+    <div class="card resp" style="border-top-color:var(--c-gustavo)">
+      <h4><span class="dot" style="background:var(--c-gustavo)"></span>Gustavo Peixoto Siriacov</h4>
+      <div class="who">Aulas e sincronização (Frente 3)</div>
+      <ul>
+        <li>Reconhecer a plataforma da faculdade e o login</li>
+        <li>Adaptador real do scraper (ou ampliar o portal demo)</li>
+        <li>Tela Aulas e botão Sincronizar, com tratamento de erros</li>
+        <li>Envio da entrega no LEX</li>
+      </ul>
+    </div>
+    <div class="card resp" style="border-top-color:var(--c-tales)">
+      <h4><span class="dot" style="background:var(--c-tales)"></span>Tales Ivaniski Galina</h4>
+      <div class="who">Telas e experiência de uso (Frente 1)</div>
+      <ul>
+        <li>Tela do Tutor com histórico de conversas</li>
+        <li>PWA: ícone, instalação e uso sem conexão</li>
+        <li>Polimento responsivo e acessibilidade</li>
+        <li>Vídeo curto de demonstração</li>
+      </ul>
+    </div>
+    <div class="card resp" style="border-top-color:var(--c-lorenzo)">
+      <h4><span class="dot" style="background:var(--c-lorenzo)"></span>Lorenzo Ruggini Lindemann</h4>
+      <div class="who">Acessos e hospedagem (Frente 2)</div>
+      <ul>
+        <li>Login com Google (OAuth), registrado no log</li>
+        <li>Deploy online com HTTPS e segredos em variáveis</li>
+        <li>Segurança: cookie <i>Secure</i> e limite de tentativas</li>
+        <li>Revisão da área do administrador</li>
+      </ul>
+    </div>
+    <div class="card resp" style="border-top-color:var(--c-eduardo)">
+      <h4><span class="dot" style="background:var(--c-eduardo)"></span>Eduardo Cassel da Costa</h4>
+      <div class="who">Professor Tutor IA, testes e documentação</div>
+      <ul>
+        <li>OpenRouter com chave real e prompt por disciplina</li>
+        <li>Limite de uso e controle de custo da IA</li>
+        <li>Testes unitários e ponta a ponta</li>
+        <li>Relatório final e roteiro da apresentação</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Cronograma</h3>
+  <div class="legend">
+    <span><i class="g-gustavo"></i>G = Gustavo</span>
+    <span><i class="g-tales"></i>T = Tales</span>
+    <span><i class="g-lorenzo"></i>L = Lorenzo</span>
+    <span><i class="g-eduardo"></i>E = Eduardo</span>
+    <span><i class="g-todos"></i>Todos</span>
+  </div>
+  <table class="gantt">
+    <thead>
+      <tr>
+        <th>Tarefa</th><th style="width:66px">Resp.</th>
+        <th class="w">S1<small>26/10–01/11</small></th>
+        <th class="w">S2<small>02/11–08/11</small></th>
+        <th class="w">S3<small>09/11–15/11</small></th>
+        <th class="w">S4<small>16/11–22/11</small></th>
+        <th class="w">S5<small>23/11–29/11</small></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Fórum, leitura da Definição do Trabalho FINAL, escopo</td><td class="who">Todos</td>
+          <td class="c on"><b class="g-todos">T</b></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td></tr>
+      <tr><td>Chave OpenRouter, credenciais Google, hospedagem</td><td class="who">Lorenzo, Eduardo</td>
+          <td class="c on"><b class="g-lorenzo">L</b></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td></tr>
+      <tr><td>Reconhecimento da plataforma da faculdade</td><td class="who">Gustavo</td>
+          <td class="c on"><b class="g-gustavo">G</b></td><td class="c on"><b class="g-gustavo">G</b></td><td class="c"></td><td class="c"></td><td class="c"></td></tr>
+      <tr><td>Tutor IA real: streaming, prompt por disciplina</td><td class="who">Eduardo</td>
+          <td class="c"></td><td class="c on"><b class="g-eduardo">E</b></td><td class="c on"><b class="g-eduardo">E</b></td><td class="c"></td><td class="c"></td></tr>
+      <tr><td>Tela do Tutor com histórico de conversas</td><td class="who">Tales</td>
+          <td class="c"></td><td class="c on"><b class="g-tales">T</b></td><td class="c on"><b class="g-tales">T</b></td><td class="c"></td><td class="c"></td></tr>
+      <tr><td>Login com Google</td><td class="who">Lorenzo</td>
+          <td class="c"></td><td class="c on"><b class="g-lorenzo">L</b></td><td class="c on"><b class="g-lorenzo">L</b></td><td class="c"></td><td class="c"></td></tr>
+      <tr><td>Deploy online com HTTPS</td><td class="who">Lorenzo</td>
+          <td class="c"></td><td class="c"></td><td class="c on"><b class="g-lorenzo">L</b></td><td class="c on"><b class="g-lorenzo">L</b></td><td class="c"></td></tr>
+      <tr><td>PWA instalável</td><td class="who">Tales</td>
+          <td class="c"></td><td class="c"></td><td class="c on"><b class="g-tales">T</b></td><td class="c on"><b class="g-tales">T</b></td><td class="c"></td></tr>
+      <tr><td>Adaptador real e sincronização (plano B: portal de demonstração)</td><td class="who">Gustavo</td>
+          <td class="c"></td><td class="c"></td><td class="c on"><b class="g-gustavo">G</b></td><td class="c on"><b class="g-gustavo">G</b></td><td class="c"></td></tr>
+      <tr><td>Testes unitários e ponta a ponta; limite de uso da IA</td><td class="who">Eduardo</td>
+          <td class="c"></td><td class="c"></td><td class="c on"><b class="g-eduardo">E</b></td><td class="c on"><b class="g-eduardo">E</b></td><td class="c"></td></tr>
+      <tr><td>Integração no ar, correções e acessibilidade</td><td class="who">Todos</td>
+          <td class="c"></td><td class="c"></td><td class="c"></td><td class="c on"><b class="g-todos">T</b></td><td class="c"></td></tr>
+      <tr><td>Relatório final e diagramas atualizados</td><td class="who">Eduardo</td>
+          <td class="c"></td><td class="c"></td><td class="c"></td><td class="c on"><b class="g-eduardo">E</b></td><td class="c on"><b class="g-eduardo">E</b></td></tr>
+      <tr><td>Vídeo de demonstração e ensaio da apresentação</td><td class="who">Tales, todos</td>
+          <td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c on"><b class="g-tales">T</b></td></tr>
+      <tr><td>Envio da entrega final no LEX</td><td class="who">Gustavo</td>
+          <td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c on"><b class="g-gustavo">G</b></td></tr>
+    </tbody>
+  </table>
+  <p class="muted" style="font-size:8.4pt;margin:0">Entrega final e apresentação na data da <i>Definição do Trabalho FINAL</i>; o cronograma será ajustado a ela.</p>
+</section>
+
+<!-- ===================================================== PÁGINA 4 -->
+<section class="page">
+  <h2 style="margin-top:0"><span class="n">4</span>Objetivo</h2>
+  <p class="lead"><b>Objetivo geral:</b> entregar a versão final do EduMind como um aplicativo que um estudante realmente use no dia a dia,
+     instalado no celular, acessível de qualquer dispositivo e com um tutor de IA que ajuda a estudar cada disciplina.</p>
+
+  <h3>Objetivos específicos</h3>
+  <ul>
+    <li><b>Aprofundar o conhecimento</b> em desenvolvimento para dispositivos móveis: interface <i>mobile-first</i>, PWA e uso em aparelhos reais.</li>
+    <li><b>Resolver um problema existente</b> dos próprios integrantes: informação acadêmica espalhada e estudo sem plano.</li>
+    <li><b>Integrar uma IA generativa</b> a um produto real (streaming de respostas, prompt por contexto, controle de custo).</li>
+    <li><b>Praticar engenharia de software em equipe:</b> divisão em frentes, contratos compartilhados, testes automatizados e revisão por <i>pull request</i>.</li>
+    <li><b>Apresentar à turma um estudo de caso</b> completo, do protótipo ao app no ar, com demonstração ao vivo.</li>
+    <li>Tirar a nota máxima (4,0) :-)</li>
+  </ul>
+
+  <h3>Como saberemos que deu certo</h3>
+  <table>
+    <thead><tr><th style="width:56%">Critério</th><th>Como será verificado</th></tr></thead>
+    <tbody>
+      <tr><td>O tutor responde com IA real e guarda o histórico por disciplina</td><td>Demonstração ao vivo e teste automatizado</td></tr>
+      <tr><td>Entrar com Google funciona e aparece no log de acesso do administrador</td><td>Demonstração ao vivo</td></tr>
+      <tr><td>O app abre por uma URL pública (HTTPS) e pode ser instalado no celular</td><td>Instalação em um aparelho Android durante a apresentação</td></tr>
+      <tr><td>Os testes passam e nada quebra ao sincronizar duas vezes seguidas</td><td><code>npm test</code> e <code>npm run e2e</code></td></tr>
+      <tr><td>Documentação e vídeo entregues no prazo</td><td>Arquivos enviados no LEX</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Riscos e como o grupo lida com eles</h3>
+  <table>
+    <thead><tr><th style="width:36%">Risco</th><th>Resposta</th></tr></thead>
+    <tbody>
+      <tr><td>A plataforma da faculdade tem MFA, captcha ou termos que proíbem automação</td><td>Não burlamos nada: a entrega 4 é condicional e o portal de demonstração garante uma apresentação completa.</td></tr>
+      <tr><td>Custo ou indisponibilidade da API de IA</td><td>Teto de gasto, limite de uso por usuário e modo demonstração como alternativa.</td></tr>
+      <tr><td>Prazo curto para várias entregas ao mesmo tempo</td><td>Prioridade: tutor real, app no ar e login Google. Se faltar tempo, o adaptador real é o primeiro a sair do escopo.</td></tr>
+      <tr><td>Integridade acadêmica no uso da IA</td><td>O tutor explica e orienta; não escreve trabalhos prontos. Aviso fixo na interface.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+</body>
+</html>
