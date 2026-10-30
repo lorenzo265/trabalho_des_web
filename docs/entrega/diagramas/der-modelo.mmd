@@ -1,0 +1,87 @@
+erDiagram
+  USERS ||--o{ SESSIONS : "abre"
+  USERS ||--o{ ACCESS_LOGS : "gera"
+  SESSIONS ||--o| ACCESS_LOGS : "registrada em"
+  USERS ||--o{ SUBJECTS : "cursa"
+  USERS ||--o{ DAILY_GOALS : "define"
+  USERS ||--o{ STUDY_SESSIONS : "registra"
+  USERS ||--o{ CHAT_THREADS : "conversa"
+  USERS ||--o{ LESSONS : "recebe"
+  USERS ||--o{ ASSIGNMENTS : "recebe"
+  USERS ||--o{ SYNC_RUNS : "dispara"
+  SUBJECTS ||--o{ TOPICS : "tem"
+  SUBJECTS ||--o{ DAILY_GOALS : "recebe"
+  SUBJECTS ||--o{ STUDY_SESSIONS : "recebe"
+  SUBJECTS ||--o{ LESSONS : "tem"
+  SUBJECTS ||--o{ ASSIGNMENTS : "tem"
+  SUBJECTS |o--o{ CHAT_THREADS : "contexto"
+  CHAT_THREADS ||--o{ CHAT_MESSAGES : "contém"
+
+  USERS { int id PK
+    text email UK
+    text name
+    text password_hash
+    text role "user | admin"
+    int is_active
+    int weekly_goal_minutes }
+  SESSIONS { int id PK
+    int user_id FK
+    text token_hash UK
+    text device
+    text expires_at
+    text revoked_at }
+  ACCESS_LOGS { int id PK
+    int user_id FK
+    int session_id FK
+    text user_name
+    text login_at
+    text logout_at }
+  SUBJECTS { int id PK
+    int user_id FK
+    text name "unico por usuario"
+    text professor
+    text color
+    text source "manual | scraper" }
+  TOPICS { int id PK
+    int subject_id FK
+    text title
+    text status "pendente | estudando | concluido"
+    text due_date
+    text done_at }
+  DAILY_GOALS { int id PK
+    int user_id FK
+    int subject_id FK
+    text goal_date
+    text description
+    int done }
+  STUDY_SESSIONS { int id PK
+    int user_id FK
+    int subject_id FK
+    text day
+    int minutes }
+  CHAT_THREADS { int id PK
+    int user_id FK
+    int subject_id FK
+    text title }
+  CHAT_MESSAGES { int id PK
+    int thread_id FK
+    text role "user | assistant"
+    text content }
+  LESSONS { int id PK
+    int user_id FK
+    int subject_id FK
+    text external_id UK
+    text date
+    text start_time }
+  ASSIGNMENTS { int id PK
+    int user_id FK
+    int subject_id FK
+    text external_id UK
+    text title
+    text due_date
+    text status }
+  SYNC_RUNS { int id PK
+    int user_id FK
+    text source "mock | portal"
+    text status
+    text started_at }
