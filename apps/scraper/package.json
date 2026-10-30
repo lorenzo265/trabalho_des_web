@@ -8,7 +8,9 @@
     "portal": "tsx --env-file-if-exists=../../.env src/portal-mock/server.ts",
     "scrape": "tsx --env-file-if-exists=../../.env src/cli.ts",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "lex:login": "tsx --env-file-if-exists=../../.env src/lex/login.ts",
+    "lex:probe": "tsx --env-file-if-exists=../../.env src/lex/probe.ts"
   },
   "dependencies": {
     "@edumind/contracts": "*",

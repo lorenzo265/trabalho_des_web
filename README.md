@@ -33,6 +33,17 @@ Outros comandos: `npm test`, `npm run typecheck`, `npm run scrape` (roda o scrap
 o modelo de dados do acesso e do log, o fluxograma de acesso e registro do log e a área do administrador. As capturas
 (`telas/`) e os diagramas (`diagramas/`) são gerados por `npm run e2e:shots` e pelos arquivos `.mmd`.
 
+## LEX (login assistido, em desenvolvimento)
+
+O adaptador do LEX real (Blackboard Learn Ultra) ainda não existe; estes dois comandos preparam o reconhecimento. Rode **na sua máquina** (precisa de tela):
+
+```bash
+npm run lex:login   # abre o navegador: você entra com senha e MFA; só a sessão é gravada em data/lex-session.json
+npm run lex:probe   # lê (só GET) alguns endpoints e grava um resumo SEM valores pessoais em data/lex-probe.txt
+```
+
+A senha nunca passa pelo app. O arquivo de sessão vale como senha enquanto estiver ativo: fica em `data/` (fora do git) e não deve ser enviado a ninguém.
+
 ## Documentação
 
 - [Estrutura e tech stack do PoC](docs/superpowers/specs/2026-10-23-poc-estrutura-stack.md) ← **comece aqui**

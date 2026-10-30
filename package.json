@@ -21,7 +21,9 @@
     "test": "npm run test --workspaces --if-present",
     "build": "npm run build -w @edumind/web",
     "e2e": "node e2e/run.mjs",
-    "e2e:shots": "SHOTS=1 node e2e/run.mjs"
+    "e2e:shots": "SHOTS=1 node e2e/run.mjs",
+    "lex:login": "npm run lex:login -w @edumind/scraper",
+    "lex:probe": "npm run lex:probe -w @edumind/scraper"
   },
   "devDependencies": {
     "concurrently": "^9.0.0",
