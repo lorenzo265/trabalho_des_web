@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const BASE = process.env.E2E_URL ?? 'http://localhost:5173';
 const SHOTS = process.env.SHOTS === '1';
-const OUT = join(ROOT, 'docs', 'entrega', 'telas');
+const OUT = process.env.SHOTS_DIR ?? join(ROOT, 'docs', 'entrega', 'telas');
 if (SHOTS) mkdirSync(OUT, { recursive: true });
 
 const DEMO = { email: 'aluno@edumind.local', password: 'aluno12345' };
