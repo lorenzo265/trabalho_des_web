@@ -34,6 +34,7 @@ async function probe(api: APIRequestContext, label: string, path: string): Promi
   }
   const ctype = res.headers()['content-type'] ?? '';
   log(`status ${res.status()} · ${ctype.split(';')[0] || 'sem content-type'}`);
+  if (res.headers().allow) log(`allow: ${res.headers().allow}`);
   if (res.status() >= 300 && res.status() < 400) log(`redireciona para: ${new URL(res.headers().location ?? '', LEX_URL).pathname}`);
   if (!res.ok() || !ctype.includes('json')) return { ok: false };
   const json: unknown = await res.json().catch(() => undefined);
@@ -65,18 +66,29 @@ async function main(): Promise<void> {
     if (!me.ok) {
       log('\nA sessão não funcionou (expirou ou o endpoint é outro). Rode npm run lex:login de novo e tente outra vez.');
     } else {
-      const memberships = await probe(api, '2. Minhas disciplinas', '/learn/api/v1/users/me/memberships?expand=course&limit=50');
-      const courseId =
-        (memberships.json as { results?: Array<{ courseId?: string }> } | undefined)?.results?.[0]?.courseId ?? firstOf(memberships.json, 'courseId');
-      const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
-      const until = new Date(Date.now() + 120 * 86_400_000).toISOString();
-      await probe(api, '3. Calendário (aulas e prazos)', `/learn/api/v1/calendars/items?since=${encodeURIComponent(since)}&until=${encodeURIComponent(until)}`);
+      const meId = (me.json as { id?: string } | undefined)?.id;
+      const memberships = await probe(api, '2. Minhas disciplinas', '/learn/api/v1/users/me/memberships?expand=course&limit=200');
+      // Disciplina de teste: do semestre mais recente, preferindo "Dispositivos Móveis".
+      type Membership = { courseId?: string; course?: { name?: string; term?: { name?: string; startDate?: string } } };
+      const all = ((memberships.json as { results?: Membership[] } | undefined)?.results ?? []).filter((m) => m.courseId);
+      const latest = all.map((m) => m.course?.term?.startDate ?? '').sort().pop();
+      const current = all.filter((m) => (m.course?.term?.startDate ?? '') === latest);
+      log(`\n(${all.length} disciplinas no total, ${current.length} no semestre mais recente)`);
+      const pick = current.find((m) => /DISPOSITIVOS/i.test(m.course?.name ?? '')) ?? current[0] ?? all[0];
+      const courseId = pick?.courseId;
+      const since = encodeURIComponent(new Date(Date.now() - 30 * 86_400_000).toISOString());
+      const until = encodeURIComponent(new Date(Date.now() + 120 * 86_400_000).toISOString());
+      await probe(api, '3a. Calendário: prazos (interno)', `/learn/api/v1/calendars/dueDateItems?since=${since}&until=${until}&limit=50`);
+      await probe(api, '3b. Calendário: lista de calendários', '/learn/api/v1/calendars');
+      await probe(api, '3c. Calendário (público): prazos de notas', `/learn/api/public/v1/calendars/items?type=GradebookColumn&since=${since}&until=${until}&limit=50`);
       if (courseId) {
-        await probe(api, '4. Conteúdo da 1ª disciplina (interno)', `/learn/api/v1/courses/${encodeURIComponent(courseId)}/contents?limit=5`);
-        await probe(api, '5. Conteúdo da 1ª disciplina (público)', `/learn/api/public/v1/courses/${encodeURIComponent(courseId)}/contents?limit=5`);
-        await probe(api, '6. Notas da 1ª disciplina', `/learn/api/public/v1/courses/${encodeURIComponent(courseId)}/gradebook/columns?limit=5`);
+        const c = encodeURIComponent(courseId);
+        await probe(api, '4. Calendário (público): itens da disciplina', `/learn/api/public/v1/calendars/items?type=Course&courseId=${c}&since=${since}&until=${until}&limit=50`);
+        await probe(api, '5. Docentes e alunos da disciplina', `/learn/api/public/v1/courses/${c}/users?expand=user&limit=5`);
+        await probe(api, '6. Trabalhos e notas (colunas) da disciplina', `/learn/api/public/v1/courses/${c}/gradebook/columns?limit=100`);
+        if (meId) await probe(api, '7. Minhas notas e situação na disciplina', `/learn/api/public/v1/courses/${c}/gradebook/users/${encodeURIComponent(meId)}?limit=100`);
       } else {
-        log('\n(sem courseId na resposta 2: pulei os testes 4 a 6)');
+        log('\n(sem courseId: pulei os testes 4 a 7)');
       }
     }
   } finally {

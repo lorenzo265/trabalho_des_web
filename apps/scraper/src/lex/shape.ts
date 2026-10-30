@@ -4,7 +4,7 @@
  */
 const SHOW = new Set([
   'courseId', 'externalId', 'name', 'title', 'courseName', 'type', 'calendarName', 'calendarNameLocalizable',
-  'startDate', 'endDate', 'dueDate', 'start', 'end', 'availability', 'role', 'contentHandler', 'gradable',
+  'startDate', 'endDate', 'dueDate', 'start', 'end', 'availability', 'role', 'contentHandler', 'gradable', 'columnId', 'status', 'courseRoleId', 'calendarId',
 ]);
 const MAX_DEPTH = 5;
 const MAX_VALUE = 60;
