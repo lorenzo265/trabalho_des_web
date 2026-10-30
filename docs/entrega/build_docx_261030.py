@@ -426,13 +426,5 @@ code(doc, "modules/access/service.ts — login: sessão + log + último acesso, 
 code(doc, "modules/access/service.ts — logout: encerra a sessão e fecha o log", snip("modules/access/service.ts", "function endSession", "})();", 1))
 code(doc, "modules/sync/import.ts — importação idempotente de aulas (insere ou atualiza)", snip("modules/sync/import.ts", "for (const l of course.lessons)", "stats.updated++;", 2))
 
-# ------------------------------------------------------------------ 6. pendências
-doc.add_heading("6. Observação", level=1)
-para(
-    doc,
-    "As telas e os trechos refletem o estado do projeto em 30/10/2026. O model continua sendo desenvolvido; "
-    "os trechos de código deste documento são gerados a partir dos arquivos da API a cada execução do script de build.",
-)
-
 doc.save(OUT)
 print(f"Gerado: {OUT}")
