@@ -250,6 +250,113 @@ table(
     widths=[4.5, 12.5],
 )
 
+# ------------------------------------------------------------------ 3.x estrutura detalhada
+import re
+
+DESC = {
+    "users": ("Contas de usuário. Cada estudante e cada administrador é uma linha.", {
+        "id": "identificador gerado automaticamente", "email": "login; único, sem diferenciar maiúsculas",
+        "name": "nome exibido no app e no log", "password_hash": "senha protegida com scrypt (a senha em si nunca é guardada)",
+        "level": "nível de ensino: medio, superior ou concurso", "role": "papel: user ou admin",
+        "is_active": "1 = ativa, 0 = bloqueada pelo administrador", "weekly_goal_minutes": "meta de estudo da semana, em minutos",
+        "created_at": "data e hora do cadastro", "last_login_at": "data e hora do último login"}),
+    "sessions": ("Uma linha por dispositivo logado. O servidor consegue encerrar qualquer sessão.", {
+        "id": "identificador", "user_id": "dono da sessão (apagada junto com a conta)", "token_hash": "hash sha256 do token do cookie; o token em si não é guardado",
+        "device": "texto como \"Chrome · Android\"", "user_agent": "identificação completa do navegador", "ip": "endereço do acesso",
+        "created_at": "início da sessão", "last_seen_at": "última atividade", "expires_at": "validade (7 dias por padrão)",
+        "revoked_at": "quando foi encerrada (vazio = ativa)", "revoke_reason": "motivo: manual, expired, revoked ou admin"}),
+    "access_logs": ("Histórico de acessos: nome, data, hora de login e hora de logout. Sobrevive à exclusão da conta.", {
+        "id": "identificador", "user_id": "usuário (vira vazio se a conta for excluída)", "user_name": "cópia do nome no momento do login",
+        "user_email": "cópia do e-mail no momento do login", "session_id": "sessão que originou o registro", "method": "password ou google",
+        "device": "dispositivo usado", "ip": "endereço do acesso", "login_at": "data e hora do login",
+        "logout_at": "data e hora do logout (vazio = ainda em andamento)", "logout_reason": "manual, expired, revoked ou admin"}),
+    "subjects": ("Disciplinas do estudante, criadas à mão ou importadas pelo scraper.", {
+        "id": "identificador", "user_id": "dono da disciplina", "name": "nome; único por usuário, sem diferenciar maiúsculas",
+        "professor": "nome do professor (opcional)", "room": "sala (opcional)", "color": "cor em hexadecimal (#RRGGBB)",
+        "source": "origem: manual ou scraper", "external_id": "código na faculdade, usado para não duplicar importações", "created_at": "data e hora de criação"}),
+    "topics": ("Tópicos (assuntos) de estudo de cada disciplina.", {
+        "id": "identificador", "subject_id": "disciplina do tópico (apagado junto com ela)", "title": "título do tópico", "notes": "anotações (opcional)",
+        "position": "ordem de exibição dentro da disciplina", "status": "pendente, estudando ou concluido", "due_date": "prazo (AAAA-MM-DD, opcional)",
+        "done_at": "quando foi concluído (preenchido e limpo automaticamente)"}),
+    "daily_goals": ("Metas do dia, ligadas a uma disciplina.", {
+        "id": "identificador", "user_id": "dono da meta", "subject_id": "disciplina da meta", "goal_date": "dia da meta (AAAA-MM-DD)",
+        "description": "o que estudar", "target_minutes": "tempo previsto em minutos (opcional, maior que zero)", "done": "1 = concluída",
+        "done_at": "quando foi concluída"}),
+    "study_sessions": ("Tempo realmente estudado; é a base dos gráficos da tela Progresso.", {
+        "id": "identificador", "user_id": "estudante", "subject_id": "disciplina estudada", "started_at": "data e hora de início",
+        "day": "dia local do aluno, usado para somar por dia", "minutes": "duração em minutos (maior que zero)"}),
+    "chat_threads": ("Conversas com o Professor Tutor IA.", {
+        "id": "identificador", "user_id": "dono da conversa", "subject_id": "disciplina de contexto (vazio = conversa geral)",
+        "title": "título gerado a partir da primeira mensagem", "created_at": "criação", "updated_at": "última mensagem"}),
+    "chat_messages": ("Mensagens de cada conversa.", {
+        "id": "identificador", "thread_id": "conversa (apagada junto com ela)", "role": "user (aluno) ou assistant (tutor)",
+        "content": "texto da mensagem", "created_at": "data e hora"}),
+    "lessons": ("Aulas lidas da faculdade pelo scraper.", {
+        "id": "identificador", "user_id": "estudante", "subject_id": "disciplina da aula", "external_id": "código da aula na faculdade; único por usuário",
+        "date": "dia da aula", "start_time": "hora de início (HH:mm)", "end_time": "hora de término (HH:mm)", "topic": "assunto (opcional)",
+        "room": "sala (opcional)", "updated_at": "última atualização pela importação"}),
+    "assignments": ("Trabalhos e provas lidos da faculdade pelo scraper.", {
+        "id": "identificador", "user_id": "estudante", "subject_id": "disciplina do trabalho", "external_id": "código na faculdade; único por usuário",
+        "title": "título", "description": "descrição (opcional)", "due_date": "data de entrega", "status": "pendente, entregue ou corrigido",
+        "grade": "nota (opcional)", "updated_at": "última atualização pela importação"}),
+    "sync_runs": ("Registro de cada sincronização com a faculdade.", {
+        "id": "identificador", "user_id": "quem sincronizou", "source": "mock (portal de demonstração) ou portal", "status": "running, ok ou error",
+        "started_at": "início", "finished_at": "fim", "stats_json": "resumo (quantos itens criados/atualizados)", "error": "mensagem de erro, se houver"}),
+}
+
+
+def schema_columns() -> dict:
+    """Colunas de cada tabela, lidas de db/schema.sql: {tabela: [(coluna, tipo, regras)]}."""
+    txt = (API / "db" / "schema.sql").read_text(encoding="utf-8")
+    out = {}
+    for m in re.finditer(r"create table (\w+) \((.*?)\n\);", txt, re.S):
+        cols = []
+        for line in m.group(2).split("\n"):
+            line = re.sub(r"--.*", "", line).strip().rstrip(",")
+            mm = re.match(r"(\w+)\s+(integer|text|real)\b(.*)", line)
+            if mm:
+                rules = mm.group(3).strip()
+                rules = re.sub(r"\s+", " ", rules)
+                cols.append((mm.group(1), mm.group(2), rules))
+        out[m.group(1)] = cols
+    return out
+
+
+doc.add_heading("3.1 Como o banco é criado e usado", level=2)
+para(doc, "Do primeiro uso até a resposta que o app recebe, o caminho dos dados é este:", space_after=4)
+for label, text in [
+    ("1. Abertura: ", "ao iniciar, a API abre o arquivo SQLite (data/edumind.db), liga a verificação de chaves estrangeiras e o modo WAL (leituras e escritas simultâneas)."),
+    ("2. Migração: ", "o banco guarda um número de versão (pragma user_version). Se estiver abaixo da versão atual, o arquivo schema.sql é executado dentro de uma transação, criando todas as tabelas e índices. Se já estiver atualizado, nada acontece."),
+    ("3. Requisição: ", "o app web envia a ação (por exemplo, criar disciplina) por HTTP. A API confirma o login pelo cookie de sessão."),
+    ("4. Validação: ", "os dados enviados são conferidos por um esquema (tipos, tamanhos, formatos de data). Dado inválido é recusado antes de chegar ao banco."),
+    ("5. Operação: ", "o repositório/rota executa o SQL (insert, select, update ou delete) com parâmetros e sempre filtrando pelo usuário logado, de modo que ninguém acessa dados de outra conta."),
+    ("6. Resposta: ", "a linha do banco (nomes como weekly_goal_minutes) é convertida para o formato do app (weeklyGoalMinutes) e devolvida em JSON."),
+]:
+    bullet(doc, label, text)
+para(doc, "Convenções de armazenamento:", bold=True, space_after=2)
+bullet(doc, "Data e hora: ", "texto ISO-8601 em UTC (ex.: 2026-10-30T14:05:00.000Z), sempre gravado pela aplicação.")
+bullet(doc, "Dia de calendário: ", "AAAA-MM-DD (data local do aluno); horário de aula: HH:mm.")
+bullet(doc, "Verdadeiro/falso: ", "inteiro 0 ou 1 (SQLite não tem tipo booleano).")
+bullet(doc, "Tipos usados: ", "integer (números), text (textos e datas) e real (nota).")
+bullet(doc, "Restrições no próprio banco: ", "not null, unique, check (valores permitidos), chaves estrangeiras com on delete cascade ou set null, e índices para consultas rápidas.")
+
+doc.add_heading("3.2 Tabelas e colunas", level=2)
+para(doc, "Para cada tabela: finalidade e colunas (tipo, regras do banco e significado). PK = chave primária; FK = chave estrangeira.", color=MUTED)
+cols = schema_columns()
+for tname, (purpose, cdesc) in DESC.items():
+    if tname not in cols:
+        raise SystemExit(f"Tabela ausente no schema.sql: {tname}")
+    para(doc, tname, bold=True, size=12, color=NAVY, space_after=1)
+    para(doc, purpose, space_after=3)
+    rows = []
+    for c, t, rules in cols[tname]:
+        rule = rules
+        rule = re.sub(r"primary key autoincrement", "PK", rule)
+        rule = re.sub(r"references (\w+)\((\w+)\)( on delete (cascade|set null))?", lambda m: f"FK → {m.group(1)}" + (f" ({m.group(4)})" if m.group(4) else ""), rule)
+        rule = re.sub(r"check \(.*", "restrito a valores válidos", rule) if "check" in rule else rule
+        rows.append([c, t, rule.replace("not null", "obrigatório").replace("default", "padrão").replace("unique", "único").replace("collate nocase", "sem diferenciar caixa").strip(), cdesc.get(c, "")])
+    table(doc, ["Coluna", "Tipo", "Regras", "Significado"], rows, widths=[3.2, 1.6, 4.4, 7.8])
+
 # ------------------------------------------------------------------ 4. telas
 doc.add_page_break()
 doc.add_heading("4. Telas envolvidas na persistência", level=1)
