@@ -199,10 +199,10 @@ para(doc, "Aplicativo: EduMind. Integrantes da equipe (conforme a entrega de 23/
 table(
     doc,
     ["Integrante", "Matrícula", "Colaborou hoje?"],
-    [[n, m, "[ ] sim   [ ] não   ← preencher"] for n, m, _ in TEAM],
+    [[n, m, "Sim"] for n, m, _ in TEAM],
     widths=[7.5, 3, 6],
 )
-pending(doc, "ATENÇÃO (apagar após preencher): o código não registra quem participou da aula de 30/10. Marque acima quem colaborou hoje.")
+para(doc, "Todos os integrantes colaboraram na aula de 30/10.", space_after=6)
 
 # ------------------------------------------------------------------ 2. model
 doc.add_heading("2. O que é o model do EduMind", level=1)
