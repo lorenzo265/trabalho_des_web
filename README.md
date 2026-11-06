@@ -27,6 +27,10 @@ Abra <http://localhost:5173>. Logins de demonstração criados pelo `seed`:
 Outros comandos: `npm test`, `npm run typecheck`, `npm run scrape` (roda o scraper pela linha de comando),
 `npm run e2e` (teste de ponta a ponta no navegador, com a pilha no ar) e `npm run e2e:shots` (também grava as capturas de tela em `docs/entrega/telas/`).
 
+`npm run recon -- <endereço-do-portal> --mask "Seu Nome"` abre o portal real num navegador visível e salva as páginas que
+você escolher, sem scripts e com dados pessoais mascarados, para escrever o adaptador da faculdade:
+[`docs/recon/`](docs/recon/README.md).
+
 ## Entrega da aula (23/10)
 
 [`docs/entrega/`](docs/entrega/) reúne o documento **ProjetoG2_261023** (`.docx` e `.pdf`), com a equipe, as telas de acesso,
@@ -36,6 +40,7 @@ o modelo de dados do acesso e do log, o fluxograma de acesso e registro do log e
 ## Documentação
 
 - [Estrutura e tech stack do PoC](docs/superpowers/specs/2026-10-23-poc-estrutura-stack.md) ← **comece aqui**
+- [Reconhecimento do portal da faculdade](docs/recon/README.md) (`npm run recon`)
 - [Briefing](docs/superpowers/specs/2026-10-09-studypilot-briefing-design.md) e [SDD](docs/superpowers/specs/2026-10-09-studypilot-sdd-design.md) — visão de longo prazo (escala)
 
 ## Segredos

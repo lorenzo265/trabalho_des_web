@@ -251,7 +251,9 @@ Puppeteer/Selenium não trazem vantagem aqui; Crawlee/Scrapy são para rastreame
 O **mock** continua útil: permite testar e **demonstrar sem credenciais** e sem depender da faculdade estar no ar. Para
 apontar para o portal oficial só falta o adaptador `apps/scraper/src/adapters/portal.ts` (hoje um esqueleto) e
 `SCRAPER_SOURCE=portal`. Para escrevê-lo é preciso **ver o portal**: URL, tipo de login (usuário/senha, SSO, MFA/captcha) e
-o HTML (ou HAR sanitizado) de 3 páginas: login, lista de disciplinas e uma disciplina. Credenciais **nunca** no chat nem
+o HTML (ou HAR sanitizado) de 3 páginas: login, lista de disciplinas e uma disciplina. O comando `npm run recon`
+([`docs/recon/`](../../recon/README.md)) captura essas páginas já sem scripts e com dados pessoais mascarados, e diz qual
+parece ser a plataforma e o tipo de login. Credenciais **nunca** no chat nem
 no repositório: ficam em variáveis de ambiente (`PORTAL_URL`, `PORTAL_USER`, `PORTAL_PASSWORD`) e o domínio precisa estar
 liberado no acesso de rede do ambiente.
 

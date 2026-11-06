@@ -7,6 +7,7 @@
   "scripts": {
     "portal": "tsx --env-file-if-exists=../../.env src/portal-mock/server.ts",
     "scrape": "tsx --env-file-if-exists=../../.env src/cli.ts",
+    "recon": "tsx --env-file-if-exists=../../.env src/recon/cli.ts",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run"
   },
