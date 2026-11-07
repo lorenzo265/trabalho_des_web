@@ -55,8 +55,8 @@ flowchart LR
 |---|---|---|---|
 | **1. Telas** | `apps/web` | Toda a interface, responsiva (celular → desktop), estados de carregando/vazio/erro | Login, Dashboard, Disciplinas, Tutor IA, Progresso, Aulas, Perfil, Admin |
 | **2. Acessos** | `apps/api/src/modules/{auth,access,admin}` + telas Login/Perfil/Admin | Cadastro, login e senha, **sessão por dispositivo**, **log de acesso** (nome, data, hora de login, hora de logout), área do admin | `/api/auth/*`, `/api/me/*`, `/api/admin/*` |
-| **3. Aulas** | `apps/scraper` + `apps/api/src/modules/{lessons,sync}` + tela Aulas | Scraper Playwright que lê disciplinas, aulas e trabalhos; portal mock para desenvolver sem a faculdade; botão "Sincronizar" | `/api/sync`, `/api/lessons`, `/api/assignments` |
-| *Núcleo* | `apps/api/src/modules/{subjects,topics,goals,study,chat}` | Dados do estudo e o Professor Tutor | `/api/subjects`, `/api/goals`, `/api/stats/week`, `/api/chats/*` |
+| **3. Aulas** | `apps/scraper` + `apps/api/src/modules/{lessons,sync,changes,calendar}` + telas Aulas e Calendário | Scraper Playwright que lê disciplinas, aulas e trabalhos; portal mock para desenvolver sem a faculdade; botão "Sincronizar"; **novidades** a cada sync; **calendário** e exportação `.ics` | `/api/sync`, `/api/lessons`, `/api/assignments`, `/api/changes`, `/api/calendar.ics` |
+| *Núcleo* | `apps/api/src/modules/{subjects,topics,goals,study,chat,grades}` | Dados do estudo, o Professor Tutor (com contexto de estudos) e **notas e projeção** | `/api/subjects`, `/api/goals`, `/api/stats/week`, `/api/chats/*`, `/api/subjects/:id/grades` |
 
 **Regra de fronteira:** o front só conhece `/api`; o scraper só devolve um `ScrapeResult` (formato em
 `contracts/src/scrape.ts`); o backend nunca conhece seletores HTML. Trocar a fonte (mock → faculdade real) mexe
@@ -98,11 +98,11 @@ Portas locais: **web 5173** (Vite, com *proxy* de `/api` → mesma origem, sem C
 │   ├── api/                      # FRENTES 2 e núcleo
 │   │   └── src/
 │   │       ├── server.ts · app.ts · config.ts
-│   │       ├── db/{schema.sql, db.ts}
+│   │       ├── db/{schema.sql, 002-change-events.sql, 003-grades.sql, db.ts}   # migrações em ordem (user_version)
 │   │       ├── middleware/{auth, errors, rate-limit, security}.ts
-│   │       └── modules/{auth, access, admin, subjects, topics, goals, study, chat, lessons, sync}/
+│   │       └── modules/{auth, access, admin, subjects, topics, goals, study, chat, lessons, sync, changes, calendar, grades}/
 │   └── scraper/                  # FRENTE 3 — extração de aulas
-│       └── src/{adapters, portal-mock, normalize.ts, scrape.ts, cli.ts}
+│       └── src/{adapters, portal-mock, recon, normalize.ts, scrape.ts, cli.ts}   # recon = `npm run recon` (reconhecimento do portal real)
 └── docs/superpowers/specs/       # estes documentos
 ```
 
@@ -124,6 +124,8 @@ erDiagram
   SUBJECTS ||--o{ LESSONS : "tem aulas"
   SUBJECTS ||--o{ ASSIGNMENTS : "tem trabalhos"
   USERS ||--o{ SYNC_RUNS : dispara
+  SYNC_RUNS ||--o{ CHANGE_EVENTS : "origina (novidades)"
+  SUBJECTS ||--o{ CHANGE_EVENTS : refere
 ```
 
 Tabelas (DDL completa em `apps/api/src/db/schema.sql`; timestamps em ISO-8601 UTC como `text`, datas AAAA-MM-DD locais):
@@ -133,16 +135,21 @@ Tabelas (DDL completa em `apps/api/src/db/schema.sql`; timestamps em ISO-8601 UT
 | `users` | `id, email (único, sem caixa), name, password_hash, level, role (user/admin), is_active, weekly_goal_minutes, created_at, last_login_at` |
 | `sessions` | `id, user_id → users, token_hash (único; sha256, o token nunca é guardado), device, user_agent, ip, created_at, last_seen_at, expires_at, revoked_at, revoke_reason` |
 | `access_logs` | `id, user_id → users (set null), user_name, user_email` (cópias: o log sobrevive à exclusão da conta), `session_id → sessions, method, device, ip, login_at, logout_at (null = em andamento), logout_reason (manual/expired/revoked/admin)` |
-| `subjects` | `id, user_id, name, professor, room, color, source (manual/scraper), external_id, created_at` — único `(user_id, name)` e `(user_id, external_id)` |
+| `subjects` | `id, user_id, name, professor, room, color, source (manual/scraper), external_id, created_at, target_average` (meta de média, 0–10, padrão 7 — **local**, o sync não altera) — único `(user_id, name)` e `(user_id, external_id)` |
 | `topics` | `id, subject_id, title, notes, position, status (pendente/estudando/concluido), due_date, done_at` |
 | `daily_goals` | `id, user_id, subject_id, goal_date, description, target_minutes, done, done_at` |
 | `study_sessions` | `id, user_id, subject_id, started_at, day (data local), minutes` |
 | `chat_threads` / `chat_messages` | conversa (`user_id, subject_id?, title, created_at, updated_at`) e mensagens (`role, content, created_at`) |
 | `lessons` | `id, user_id, subject_id, external_id, date, start, end, topic, room, updated_at` — único `(user_id, external_id)` |
-| `assignments` | `id, user_id, subject_id, external_id, title, description, due_date, status, grade, updated_at` — único `(user_id, external_id)` |
+| `assignments` | `id, user_id, subject_id, external_id, title, description, due_date, status, grade, updated_at, weight` (peso na média, > 0 e ≤ 100, padrão 1 — **local**, o sync não altera) — único `(user_id, external_id)` |
+| `change_events` | `id, user_id, subject_id, sync_run_id, kind, title, old_value, new_value, created_at, seen_at` — o que mudou entre duas sincronizações (`kind`: disciplina nova, trabalho novo, prazo alterado, nota lançada/alterada, situação alterada, aula nova, aulas novas (várias), aula remarcada, sala alterada); `seen_at` nulo = ainda não vista |
 | `sync_runs` | `id, user_id, source, status (running/ok/error), started_at, finished_at, stats_json, error` |
 
 **Progresso da disciplina** = tópicos concluídos ÷ total (Tela 2). **Disciplina concluída** = ≥ 1 tópico e todos concluídos.
+
+**Média e projeção** (por disciplina): média atual = Σ(nota × peso) ÷ Σ(peso dos trabalhos com nota); *necessária* = (meta × Σ(todos os pesos) − Σ(nota × peso)) ÷ Σ(peso dos que ainda não têm nota). Estados: meta garantida (necessária ≤ 0), no ritmo (≤ média atual), possível (≤ 10), fora de alcance (> 10); sem trabalhos sem nota, vira *meta atingida* ou *abaixo da meta*.
+
+**Novidades:** `importScrape` compara cada aula e trabalho com o que já estava salvo, na mesma transação do upsert. A **primeira sincronização com sucesso** é a linha de base (não gera novidades); uma disciplina nova gera um aviso só (não um por aula/trabalho); mais de 3 aulas novas numa disciplina viram um aviso agrupado; mudar só o tópico de uma aula não é novidade. Rodar de novo com os mesmos dados não gera nada.
 Toda consulta é filtrada pelo `user_id` da sessão (isolamento entre alunos).
 
 ## 6. API (REST/JSON, cookie `edumind_session`, prefixo `/api`)
@@ -170,8 +177,11 @@ paginadas: `{ "items": [...], "total": n }`. Rotas marcadas 🔒 exigem sessão;
 | Núcleo | 🔒 `POST /api/study-sessions` | `StudySessionInput` → 201 `StudySession` |
 | Núcleo | 🔒 `GET /api/stats/week?weekStart=&today=` | `WeekStats` |
 | Núcleo | 🔒 `GET /api/chats?subjectId=` · `POST /api/chats` · `GET /api/chats/:id/messages` · `DELETE /api/chats/:id` | `List<Thread>` · `ThreadInput` → 201 `Thread` · `ThreadWithMessages` · 204 |
-| Núcleo | 🔒 `POST /api/chats/:id/messages` | `MessageInput` → **SSE** (contrato em `contracts/src/chat.ts`) |
-| Aulas | 🔒 `GET /api/lessons?from&to&subjectId` · `GET /api/assignments` | `List<Lesson>` · `List<Assignment>` |
+| Núcleo | 🔒 `POST /api/chats/:id/messages` | `MessageInput` (`content`, `today?` AAAA-MM-DD local) → **SSE** (contrato em `contracts/src/chat.ts`). O prompt inclui um bloco `<dados_do_aluno>` com tópicos pendentes, próximas aulas e prazos (limites e `clean()` contra injeção de prompt) |
+| Aulas | 🔒 `GET /api/lessons?from&to&subjectId` · `GET /api/assignments` · `PATCH /api/assignments/:id` | `List<Lesson>` · `List<Assignment>` · `{ weight }` → `Assignment` (só o peso é do aluno; o resto é somente leitura) |
+| Aulas | 🔒 `GET /api/changes?limit` · `POST /api/changes/seen` | `{ items: ChangeEvent[], unseen }` (mais recentes primeiro; `unseen` conta todas) · 204 |
+| Aulas | 🔒 `GET /api/calendar.ics?from&to` | arquivo `text/calendar` (download; aulas com `TZID=America/Sao_Paulo`, prazos como evento de dia inteiro, `UID` estável) |
+| Núcleo | 🔒 `GET /api/subjects/:id/grades` · `PATCH /api/subjects/:id` (`targetAverage`) | `GradeProjection` · `Subject` |
 | Aulas | 🔒 `GET /api/sync` · `POST /api/sync` | `SyncStatus` · 202 `SyncRun` (409 se já estiver rodando) |
 
 ## 7. Fluxograma de acesso e registro do log
@@ -228,7 +238,9 @@ sequenceDiagram
 - **Somente leitura**: o scraper nunca envia, edita ou apaga nada na plataforma.
 - **Adaptadores** (`apps/scraper/src/adapters`): `mock` (portal local de demonstração, com HTML parecido com um LMS) e, no futuro,
   `portal` (a faculdade real — depende do **reconhecimento da plataforma**, ver §9, D1/D2).
-- Rodar de novo **não duplica** (chave `externalId`); itens que mudam de prazo/horário são atualizados.
+- Rodar de novo **não duplica** (chave `externalId`); itens que mudam de prazo/horário são atualizados, e cada mudança vira uma **novidade** (ver §5).
+- **Demonstração das novidades:** o portal mock aceita `POST /__demo/mudancas` (e `/__demo/reset`) para simular a faculdade mudando prazo, nota, aula e sala; `npm run portal:mudar` / `npm run portal:reset` fazem isso. Esses caminhos só existem no mock.
+- **Atualização depois do sync em qualquer tela:** o `AppShell` observa as sincronizações (`useRefreshOnSyncFinish`) e recarrega aulas, trabalhos, novidades e notas quando uma nova termina, mesmo que a pessoa tenha saído da tela Aulas durante a leitura.
 
 ### 8.1 Decisão: Playwright é a melhor ferramenta?
 

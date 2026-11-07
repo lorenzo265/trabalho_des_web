@@ -4,12 +4,14 @@ import type { Ctx } from '../../context';
 import { all, insert, one, run } from '../../db/db';
 import type { MessageRow, ThreadRow } from '../../db/rows';
 import { HttpError, notFound, tooMany } from '../../lib/errors';
+import { dateInZone } from '../../lib/dates';
 import { intParam, parseBody, qsInt } from '../../lib/http';
 import { toMessage, toThread } from '../../lib/mappers';
 import { requireAuth } from '../../middleware/auth';
 import { requireSubject } from '../subjects/repo';
 import { LlmError } from './llm';
 import { buildSystemPrompt } from './prompt';
+import { loadStudyData, renderStudyContext, summarizeStudy } from './study-context';
 
 const THREAD_SQL = `
   select c.*, s.name as subject_name, s.color as subject_color
@@ -126,10 +128,12 @@ export function chatRoutes(ctx: Ctx): Router {
     let failure: LlmError | null = null;
     try {
       send('user', toMessage(userMessage));
+      const firstName = user.name.split(/\s+/)[0] ?? user.name;
+      const study = loadStudyData(db, user.id, thread.subject_id, input.today ?? dateInZone(ctx.clock()));
       const stream = llm.stream({
-        system: buildSystemPrompt({ firstName: user.name.split(/\s+/)[0] ?? user.name, subjectName: thread.subject_name, level: user.level }),
+        system: buildSystemPrompt({ firstName, subjectName: thread.subject_name, level: user.level, study: renderStudyContext(study) }),
         history,
-        context: { firstName: user.name.split(/\s+/)[0] ?? user.name, subjectName: thread.subject_name, level: user.level },
+        context: { firstName, subjectName: thread.subject_name, level: user.level, study: summarizeStudy(study) },
         signal: abort.signal,
       });
       for await (const piece of stream) {

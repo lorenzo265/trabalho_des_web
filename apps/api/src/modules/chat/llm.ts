@@ -1,4 +1,5 @@
 import type { StudyLevel } from '@edumind/contracts';
+import type { StudyHint } from './study-context';
 
 export interface LlmTurn {
   role: 'user' | 'assistant';
@@ -11,7 +12,7 @@ export interface LlmRequest {
   /** Últimas mensagens da conversa, incluindo a pergunta atual. */
   history: LlmTurn[];
   /** Contexto estruturado (usado pelo tutor de demonstração). */
-  context: { firstName: string; subjectName: string | null; level: StudyLevel };
+  context: { firstName: string; subjectName: string | null; level: StudyLevel; study?: StudyHint };
   signal?: AbortSignal;
 }
 

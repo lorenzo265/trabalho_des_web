@@ -1,3 +1,5 @@
+import type { ChangeKind } from '@edumind/contracts';
+
 /** Formato das linhas do SQLite (snake_case) usadas pelos módulos. */
 
 export interface UserRow {
@@ -53,6 +55,7 @@ export interface SubjectRow {
   created_at: string;
   topic_count: number;
   done_count: number;
+  target_average: number;
 }
 
 export interface TopicRow {
@@ -109,6 +112,7 @@ export interface LessonRow {
   end_time: string;
   topic: string | null;
   room: string | null;
+  updated_at: string;
 }
 
 export interface AssignmentRow {
@@ -122,6 +126,22 @@ export interface AssignmentRow {
   due_date: string;
   status: 'pendente' | 'entregue' | 'corrigido';
   grade: number | null;
+  weight: number;
+  updated_at: string;
+}
+
+export interface ChangeRow {
+  id: number;
+  user_id: number;
+  subject_id: number;
+  subject_name: string;
+  subject_color: string;
+  kind: ChangeKind;
+  title: string;
+  old_value: string | null;
+  new_value: string | null;
+  created_at: string;
+  seen_at: string | null;
 }
 
 export interface SyncRunRow {

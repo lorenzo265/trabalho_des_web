@@ -3,7 +3,8 @@ import { subjectProgress } from '../lib/subject';
 import { Bot, CalendarDays, ClipboardList, ListChecks, MapPin, Pencil, Play, Plus, Trash2, User } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
-import { AssignmentRow, LessonRow } from '../components/items';
+import { GradesPanel } from '../components/GradesPanel';
+import { LessonRow } from '../components/items';
 import { Page } from '../components/layout/Page';
 import { SubjectFormModal } from '../components/SubjectFormModal';
 import { useConfirm } from '../components/ui/Confirm';
@@ -13,7 +14,7 @@ import { onColor } from '../lib/color';
 import { addDays, todayLocal } from '../lib/dates';
 import { HELP } from '../lib/help';
 import { useOptimisticValue } from '../lib/optimistic';
-import { useAssignments, useLessons, useSubject, useSubjectMutations, useTopicMutations, useTopics } from '../lib/queries';
+import { useLessons, useSubject, useSubjectMutations, useTopicMutations, useTopics } from '../lib/queries';
 
 const STATUS_OPTIONS: { value: TopicStatus; label: string }[] = [
   { value: 'pendente', label: 'Pendente' },
@@ -143,25 +144,8 @@ function LessonsTab({ subjectId }: { subjectId: number }) {
   );
 }
 
-function AssignmentsTab({ subjectId }: { subjectId: number }) {
-  const all = useAssignments();
-  if (all.isLoading) return <SkeletonList n={2} h={64} />;
-  const items = (all.data ?? []).filter((a) => a.subjectId === subjectId);
-  if (items.length === 0)
-    return (
-      <div className="card">
-        <Empty icon={<ClipboardList size={26} />} title="Sem trabalhos registrados">
-          Os trabalhos aparecem aqui depois de sincronizar com a faculdade.
-        </Empty>
-      </div>
-    );
-  return (
-    <ul className="items card">
-      {items.map((a) => (
-        <AssignmentRow key={a.id} assignment={a} />
-      ))}
-    </ul>
-  );
+function AssignmentsTab({ subjectId, color }: { subjectId: number; color: string }) {
+  return <GradesPanel subjectId={subjectId} subjectColor={color} />;
 }
 
 export function SubjectDetailPage() {
@@ -262,7 +246,7 @@ export function SubjectDetailPage() {
 
           {tab === 'topics' && <TopicsTab subjectId={s.id} />}
           {tab === 'lessons' && <LessonsTab subjectId={s.id} />}
-          {tab === 'assignments' && <AssignmentsTab subjectId={s.id} />}
+          {tab === 'assignments' && <AssignmentsTab subjectId={s.id} color={s.color} />}
         </>
       )}
       {editing && s && <SubjectFormModal subject={s} onClose={() => setEditing(false)} />}

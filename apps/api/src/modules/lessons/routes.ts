@@ -1,8 +1,10 @@
 import { Router } from 'express';
+import { assignmentPatchSchema } from '@edumind/contracts';
 import type { Ctx } from '../../context';
-import { all } from '../../db/db';
+import { all, one, run } from '../../db/db';
 import type { AssignmentRow, LessonRow } from '../../db/rows';
-import { qsDate, qsInt } from '../../lib/http';
+import { notFound } from '../../lib/errors';
+import { intParam, parseBody, qsDate, qsInt } from '../../lib/http';
 import { toAssignment, toLesson } from '../../lib/mappers';
 import { requireAuth } from '../../middleware/auth';
 
@@ -40,6 +42,22 @@ export function lessonRoutes(ctx: Ctx): Router {
       req.auth!.user.id,
     );
     res.json({ items: rows.map(toAssignment) });
+  });
+
+  // Só o PESO é do aluno; título, prazo, situação e nota vêm da faculdade (somente leitura).
+  r.patch('/assignments/:id', (req, res) => {
+    const userId = req.auth!.user.id;
+    const id = intParam(req);
+    const patch = parseBody(assignmentPatchSchema, req.body);
+    if (!one(db, 'select 1 as x from assignments where id = ? and user_id = ?', id, userId)) throw notFound('Trabalho');
+    run(db, 'update assignments set weight = ? where id = ? and user_id = ?', patch.weight, id, userId);
+    const row = one<AssignmentRow>(
+      db,
+      `select a.*, s.name as subject_name, s.color as subject_color
+       from assignments a join subjects s on s.id = a.subject_id where a.id = ?`,
+      id,
+    )!;
+    res.json(toAssignment(row));
   });
 
   return r;

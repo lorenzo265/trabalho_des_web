@@ -278,3 +278,38 @@ export function buildFixtures(today: string): PortalCourse[] {
     })),
   }));
 }
+
+/**
+ * "Mudanças simuladas" para demonstrar as Novidades do sync: depois de uma primeira leitura, aplique isto e
+ * leia de novo. Determinístico e puro (não altera o argumento). Gera 5 novidades:
+ *   prazo alterado · trabalho novo · nota lançada · aula remarcada · sala alterada.
+ */
+export function applyDemoChanges(courses: PortalCourse[], today: string): PortalCourse[] {
+  const next: PortalCourse[] = structuredClone(courses);
+  const byId = (id: string) => next.find((c) => c.id === id);
+
+  const ddm = byId('ddm');
+  const prazo = ddm?.assignments[1];
+  if (ddm && prazo) {
+    prazo.dueDate = addDays(prazo.dueDate, 7); // prazo alterado
+    ddm.assignments.push({
+      id: 'ddm-t4',
+      title: 'Apresentação e demonstração final',
+      description: 'Apresentar o aplicativo funcionando para a turma.',
+      dueDate: addDays(today, 28),
+      status: 'Pendente',
+      grade: null,
+    }); // trabalho novo
+  }
+
+  const enviado = byId('es')?.assignments.find((a) => a.status === 'Enviado');
+  if (enviado) Object.assign(enviado, { status: 'Corrigido', grade: 8.5 }); // nota lançada
+
+  const aula = byId('ia')?.lessons[2];
+  if (aula) Object.assign(aula, { date: addDays(aula.date, 1), start: '18:00', end: '19:30' }); // aula remarcada
+
+  const sala = byId('bd')?.lessons[3];
+  if (sala) sala.room = 'Laboratório 3 · Prédio 03'; // sala alterada
+
+  return next;
+}

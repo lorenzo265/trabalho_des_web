@@ -1,5 +1,6 @@
 import { messageSchema, sseErrorSchema, sseTokenSchema, type Message } from '@edumind/contracts';
 import { ApiError, errorFromResponse } from './api';
+import { todayLocal } from './dates';
 
 export interface SseEvent {
   event: string;
@@ -45,7 +46,7 @@ export async function streamChat(
       method: 'POST',
       credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
-      body: JSON.stringify({ content }),
+      body: JSON.stringify({ content, today: todayLocal() }),
       signal,
     });
   } catch (e) {

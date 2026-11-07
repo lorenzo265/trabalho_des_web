@@ -19,6 +19,16 @@ const TOM = {
   concurso: 'Vou focar no que costuma aparecer em prova.',
 } as const;
 
+/** Mostra que o tutor enxerga a situação de estudos do aluno (mesmo sem IA real). */
+function demoStudyLine(req: LlmRequest): string[] {
+  const s = req.context.study;
+  if (!s) return [];
+  const parts: string[] = [];
+  if (s.openTopics > 0) parts.push(`você tem **${s.openTopics}** tópico(s) em aberto`);
+  if (s.nextDue) parts.push(`o próximo prazo é **${excerpt(s.nextDue.title, 60)}** (${s.nextDue.dueDate})`);
+  return parts.length ? [`📚 Pelo que vejo no seu painel: ${parts.join(' e ')}.`, ''] : [];
+}
+
 /** Resposta didática determinística, claramente identificada como demonstração. */
 export function demoAnswer(req: LlmRequest): string {
   const question = excerpt(req.history.filter((t) => t.role === 'user').at(-1)?.content ?? '');
@@ -28,6 +38,7 @@ export function demoAnswer(req: LlmRequest): string {
     '',
     `Olá, ${req.context.firstName}! Vamos pensar juntos sobre **${tema}** (${levelLabel(req.context.level)}). ${TOM[req.context.level]}`,
     '',
+    ...demoStudyLine(req),
     `Sobre a sua dúvida — "${question}":`,
     '',
     '1. **Ideia central:** resuma em uma frase o que você quer descobrir.',

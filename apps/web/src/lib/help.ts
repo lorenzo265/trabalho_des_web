@@ -9,6 +9,7 @@ export const HELP: Record<string, HelpContent> = {
     title: 'Como usar o Início',
     tips: [
       'Os cartões coloridos mostram o quanto você já concluiu de cada disciplina.',
+      'Em "Lembretes" aparecem os trabalhos que vencem em até 3 dias (ou venceram há pouco). Toque no X para dispensar.',
       'Em "Metas de hoje", marque a caixinha quando terminar cada tarefa.',
       'Toque em "Tutor IA" para tirar uma dúvida a qualquer momento.',
     ],
@@ -27,6 +28,14 @@ export const HELP: Record<string, HelpContent> = {
       'Marque o status de cada tópico: pendente, estudando ou concluído. O progresso é calculado por eles.',
       'Use o prazo opcional para lembrar quando precisa terminar o tópico.',
       'O botão "Perguntar ao Tutor" já abre a conversa com o contexto desta disciplina.',
+    ],
+  },
+  calendar: {
+    title: 'Como usar o Calendário',
+    tips: [
+      'No modo Mês, toque num dia para ver as aulas e os prazos dele logo abaixo. A bandeirinha marca um prazo.',
+      'No modo Semana, os sete dias aparecem em sequência, com tudo que acontece em cada um.',
+      'Use "Baixar .ics" para levar suas aulas e prazos para o Google Agenda, Outlook ou Calendário da Apple.',
     ],
   },
   lessons: {

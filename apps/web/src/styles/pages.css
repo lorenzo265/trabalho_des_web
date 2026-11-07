@@ -114,3 +114,71 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .
 .filters .field { flex: 1 1 140px; }
 
 .tutor-side { min-width: 0; overflow-x: hidden; }
+
+/* ---------- Novidades do sync ---------- */
+/* Cabeçalho que quebra linha no celular: título numa linha, selo e botão na de baixo. */
+.card-title-wrap { flex-wrap: wrap; }
+.card-title-wrap h2 { flex: 1 1 14rem; }
+.change { display: flex; align-items: flex-start; gap: 12px; padding: 10px 4px; }
+.change + .change { border-top: 1px solid var(--border); }
+.change-unseen { background: linear-gradient(90deg, var(--primary-soft), transparent 60%); border-radius: var(--radius-sm); }
+.change-icon { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; flex: none; }
+.change-icon.tone-info { background: var(--info-soft); color: var(--primary); }
+.change-icon.tone-warning { background: var(--warning-soft); color: var(--warning); }
+.change-icon.tone-success { background: var(--success-soft); color: var(--success); }
+.change-body { flex: 1; min-width: 0; }
+.change-detail { overflow-wrap: anywhere; }
+
+.notice {
+  display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: var(--radius);
+  background: var(--warning-soft); color: var(--warning); border: 1px solid transparent; text-decoration: none; font-size: .9375rem;
+}
+.notice:hover { text-decoration: none; border-color: var(--warning); }
+.notice > span:nth-of-type(1) { flex: 1; min-width: 0; }
+
+/* Selo de contagem no menu */
+.nav-badge {
+  display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
+  background: var(--orange); color: #fff; font-size: .6875rem; font-weight: 700; line-height: 1; margin-left: auto;
+}
+.nav-icon { position: relative; display: inline-grid; place-items: center; }
+.nav-icon .nav-badge { position: absolute; top: -6px; right: -12px; margin: 0; }
+
+/* ---------- Calendário ---------- */
+.cal-card { padding: 8px; }
+.cal-head, .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
+.cal-head { padding: 4px 0 6px; text-align: center; font-size: .6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); }
+.cal-day {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 58px; padding: 6px 2px;
+  background: var(--surface); border: 1px solid transparent; border-radius: 10px; color: var(--text); text-align: center; cursor: pointer; overflow: hidden;
+}
+.cal-day:hover { background: var(--surface-2); }
+.cal-day.out { color: var(--text-muted); opacity: .55; }
+.cal-day.today .cal-num { background: var(--primary); color: var(--on-primary); }
+.cal-day.selected { border-color: var(--primary); background: var(--primary-soft); }
+.cal-num { display: inline-grid; place-items: center; min-width: 26px; height: 26px; padding: 0 4px; border-radius: 999px; font-weight: 700; font-size: .875rem; font-variant-numeric: tabular-nums; }
+.cal-dots { display: flex; gap: 3px; flex-wrap: wrap; justify-content: center; }
+.cal-dots .dot { width: 7px; height: 7px; }
+.cal-chips { display: none; }
+@media (min-width: 720px) {
+  .cal-day { align-items: stretch; min-height: 104px; padding: 6px; text-align: left; }
+  .cal-num { align-self: flex-start; }
+  .cal-dots { display: none; }
+  .cal-chips { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .cal-chip {
+    display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .6875rem; line-height: 1.35;
+    padding: 1px 5px; border-left: 3px solid var(--primary); border-radius: 4px; background: var(--surface-2);
+  }
+  .cal-chip.assignment { background: var(--warning-soft); color: var(--warning); }
+  .cal-chip svg { display: inline; vertical-align: -1px; } /* o CSS global deixa svg como bloco */
+  .cal-more { font-size: .6875rem; color: var(--text-muted); padding-left: 2px; }
+}
+
+/* ---------- Notas e projeção ---------- */
+.number-field { display: inline-flex; align-items: center; gap: 8px; }
+.weight-cell { display: grid; justify-items: center; gap: 2px; flex: none; }
+.projection { padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid transparent; line-height: 1.4; }
+.projection.tone-success { background: var(--success-soft); color: var(--success); }
+.projection.tone-info { background: var(--info-soft); color: var(--primary); }
+.projection.tone-warning { background: var(--warning-soft); color: var(--warning); }
+.projection.tone-danger { background: var(--danger-soft); color: var(--danger); }

@@ -18,6 +18,8 @@
     "seed": "npm run seed -w @edumind/api",
     "scrape": "npm run scrape -w @edumind/scraper",
     "recon": "npm run recon -w @edumind/scraper --",
+    "portal:mudar": "npm run portal:mudar -w @edumind/scraper",
+    "portal:reset": "npm run portal:reset -w @edumind/scraper",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "build": "npm run build -w @edumind/web",

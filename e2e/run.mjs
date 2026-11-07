@@ -3,7 +3,7 @@
 // Uso: node e2e/run.mjs            -> valida os fluxos
 //      SHOTS=1 node e2e/run.mjs    -> também grava PNGs em docs/entrega/telas/
 import { chromium } from 'playwright-core';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -13,6 +13,7 @@ const SHOTS = process.env.SHOTS === '1';
 const OUT = join(ROOT, 'docs', 'entrega', 'telas');
 if (SHOTS) mkdirSync(OUT, { recursive: true });
 
+const PORTAL = process.env.PORTAL_URL ?? 'http://localhost:4010'; // portal mock (gatilho de mudanças simuladas)
 const DEMO = { email: 'aluno@edumind.local', password: 'aluno12345' };
 const ADMIN = { email: process.env.ADMIN_EMAIL ?? 'admin@edumind.local', password: process.env.ADMIN_PASSWORD ?? 'admin12345' };
 const stamp = Date.now().toString(36);
@@ -213,6 +214,107 @@ console.log('\n[2] Mesma conta em outro dispositivo + telas da conta demo (deskt
     await page.getByText(/Última sincronização/).waitFor({ timeout: 90_000 });
     await shot(page, '13-aulas');
   });
+  await step('novidades: o portal muda, a nova sincronização mostra o que mudou', async () => {
+    await page.getByRole('heading', { name: 'Novidades da faculdade' }).waitFor();
+    const portal = async (acao) => {
+      const r = await fetch(`${PORTAL}/__demo/${acao}`, { method: 'POST' });
+      if (r.status !== 204) throw new Error(`gatilho do portal mock (${acao}) respondeu ${r.status}`);
+    };
+    // Clica em "Sincronizar" e espera a execução NOVA terminar (consulta a API; não depende de avisos na tela).
+    const sincronizar = async () => {
+      const ultimo = async () => (await (await page.request.get(`${BASE}/api/sync`)).json()).last;
+      const antes = (await ultimo())?.id ?? 0;
+      await page.getByRole('button', { name: 'Sincronizar', exact: true }).click();
+      const limite = Date.now() + 90_000;
+      for (;;) {
+        const l = await ultimo();
+        if (l && l.id > antes && l.status !== 'running') return l;
+        if (Date.now() > limite) throw new Error('a sincronização não terminou a tempo');
+        await page.waitForTimeout(500);
+      }
+    };
+    // Repetível: normaliza o portal e o banco primeiro; só então aplica as mudanças simuladas.
+    await portal('reset');
+    await sincronizar();
+    await portal('mudancas');
+    const run = await sincronizar();
+    if (run.status !== 'ok' || run.stats.changes < 4) throw new Error(`esperava ≥ 4 novidades, veio ${JSON.stringify(run.stats)}`);
+    const lista = page.getByRole('list', { name: 'Novidades' });
+    // Estes 4 saem em toda rodada. "Novo trabalho" só na primeira (depois o trabalho já existe no banco).
+    const esperados = ['Prazo alterado', 'Nota lançada', 'Aula remarcada', 'Sala alterada'];
+    if (run.stats.changes >= 5) esperados.push('Novo trabalho');
+    for (const label of esperados) await lista.getByText(label).first().waitFor();
+    await page.locator('.sidebar .nav-badge').first().waitFor();
+    await shot(page, '19-novidades');
+  });
+  await step('novidades: marcar como vistas zera o selo do menu', async () => {
+    await page.getByRole('button', { name: 'Marcar como vistas' }).click();
+    await page.locator('.sidebar .nav-badge').waitFor({ state: 'detached' });
+  });
+  await step('painel: lembretes de prazo podem ser dispensados e a escolha persiste', async () => {
+    await page.getByRole('link', { name: 'Início' }).first().click();
+    const lembretes = page.getByRole('list', { name: 'Lembretes de prazo' });
+    await lembretes.waitFor();
+    const nomes = () => page.locator('ul[aria-label="Lembretes de prazo"] li').allInnerTexts().then((a) => a.map((t) => t.replace(/\s+/g, ' ').slice(0, 50)));
+    // Logo após uma sincronização o painel pode mostrar, por instantes, dados em cache: espera a lista parar de mudar.
+    for (let prev = '', desde = Date.now(); Date.now() - desde < 1500; await page.waitForTimeout(100)) {
+      const atual = (await nomes()).join('|');
+      if (atual !== prev) [prev, desde] = [atual, Date.now()];
+    }
+    const antesNomes = await nomes();
+    const antes = await lembretes.getByRole('listitem').count();
+    if (antes < 1) throw new Error('nenhum lembrete de prazo no painel');
+    await page.getByRole('button', { name: /^Dispensar lembrete:/ }).first().click();
+    await page.waitForFunction((n) => document.querySelectorAll('ul[aria-label="Lembretes de prazo"] li').length === n - 1 || !document.querySelector('ul[aria-label="Lembretes de prazo"]'), antes);
+    await shot(page, '20-lembretes');
+    await page.reload();
+    await page.getByRole('heading', { name: /Olá, Gustavo!/ }).waitFor();
+    // O título aparece antes dos trabalhos carregarem; "Prazos próximos" vem dos mesmos dados dos lembretes.
+    await page.getByRole('region', { name: 'Prazos próximos' }).waitFor();
+    const depois = await page.locator('ul[aria-label="Lembretes de prazo"] li').count();
+    if (depois !== antes - 1) {
+      const guardado = await page.evaluate(() => localStorage.getItem(Object.keys(localStorage).find((k) => k.startsWith('edumind_reminders_dismissed')) ?? ''));
+      throw new Error(`dispensar não persistiu: ${antes} → ${depois}; antes=${JSON.stringify(antesNomes)}; depois=${JSON.stringify(await nomes())}; guardado=${guardado}`);
+    }
+  });
+  await step('calendário: mês com eventos, semana e download do .ics', async () => {
+    await page.getByRole('link', { name: 'Calendário' }).first().click();
+    await page.locator('.cal-grid').waitFor();
+    await page.locator('.cal-day[aria-current="date"]').waitFor();
+    await page.locator('.cal-chip').first().waitFor();
+    await shot(page, '21-calendario');
+    await page.getByRole('tab', { name: 'Semana' }).click();
+    await page.getByRole('heading', { name: / – / }).first().waitFor();
+    await page.getByRole('tab', { name: 'Mês' }).click();
+    const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('link', { name: /Baixar \.ics/ }).click()]);
+    const ics = readFileSync(await download.path(), 'utf8');
+    if (!ics.startsWith('BEGIN:VCALENDAR\r\n') || !ics.includes('BEGIN:VEVENT') || !ics.includes('DTSTART;TZID=America/Sao_Paulo')) {
+      throw new Error('arquivo .ics inválido');
+    }
+  });
+  await step('notas: meta e peso recalculam a projeção e persistem', async () => {
+    await page.getByRole('link', { name: 'Disciplinas' }).first().click();
+    await page.getByRole('link', { name: /Desenvolvimento de Dispositivos Móveis/ }).first().click();
+    await page.getByRole('tab', { name: /Trabalhos/ }).click();
+    await page.locator('#h-proj').waitFor();
+    const meta = page.getByLabel('Média desejada');
+    await meta.fill('10');
+    await meta.press('Enter');
+    await page.getByText('Meta fora de alcance').waitFor();
+    await shot(page, '22-notas');
+    await meta.fill('7');
+    await meta.press('Enter');
+    await page.getByText(/Precisa de .* nos restantes|Meta garantida/).waitFor();
+    const peso = page.locator('ul[aria-label="Trabalhos e pesos"] input').last();
+    await peso.fill('2,5');
+    await peso.press('Enter');
+    await page.reload();
+    await page.getByRole('tab', { name: /Trabalhos/ }).click();
+    const valor = await page.locator('ul[aria-label="Trabalhos e pesos"] input').last().inputValue();
+    if (valor !== '2,5') throw new Error(`peso não persistiu (valor: ${valor})`);
+    await page.locator('ul[aria-label="Trabalhos e pesos"] input').last().fill('1');
+    await page.locator('ul[aria-label="Trabalhos e pesos"] input').last().press('Enter');
+  });
   await step('tutor: resposta chega em streaming (Tela 4)', async () => {
     await page.getByRole('link', { name: 'Tutor IA' }).first().click();
     await page.getByLabel('Sua dúvida').fill('Pode me explicar o que é um Requisito Funcional?');
@@ -229,6 +331,10 @@ console.log('\n[2] Mesma conta em outro dispositivo + telas da conta demo (deskt
     if (lengths.size < 3) throw new Error(`resposta não veio em pedaços (tamanhos distintos: ${lengths.size})`);
     await page.getByRole('button', { name: 'Enviar pergunta' }).waitFor({ timeout: 15_000 });
     await shot(page, '14-tutor');
+  });
+  await step('tutor enxerga a situação de estudos do aluno (contexto)', async () => {
+    const texto = (await page.locator('.bubble.assistant').last().textContent()) ?? '';
+    if (!/Pelo que vejo no seu painel/.test(texto)) throw new Error('a resposta não mostra o contexto de estudos');
   });
   await step('histórico de conversas lista e reabre a conversa', async () => {
     await page.goto(`${BASE}/tutor`);

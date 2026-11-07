@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { isoDateTime, LIMITS } from './common';
+import { dateOnly, isoDateTime, LIMITS } from './common';
 
 export const threadSchema = z.object({
   id: z.number().int(),
@@ -31,6 +31,8 @@ export type Message = z.infer<typeof messageSchema>;
 
 export const messageInputSchema = z.object({
   content: z.string().trim().min(1, 'Escreva uma mensagem.').max(LIMITS.chatMessageMax),
+  /** Data local do aluno (AAAA-MM-DD), para o Tutor saber o que é "hoje"; sem ela o servidor usa America/Sao_Paulo. */
+  today: dateOnly.optional(),
 });
 export type MessageInput = z.infer<typeof messageInputSchema>;
 
@@ -41,7 +43,7 @@ export const threadWithMessagesSchema = z.object({
 export type ThreadWithMessages = z.infer<typeof threadWithMessagesSchema>;
 
 /**
- * Contrato SSE de `POST /api/chats/:id/messages` (corpo `{content}`):
+ * Contrato SSE de `POST /api/chats/:id/messages` (corpo `{content, today?}`):
  *   event: user   data: Message            (mensagem do aluno já gravada)
  *   event: token  data: {"t":"texto"}      (pedaços da resposta)
  *   event: done   data: Message            (resposta completa gravada)

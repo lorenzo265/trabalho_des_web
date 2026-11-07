@@ -77,7 +77,7 @@ async function runSync(ctx: Ctx, userId: number, runId: number): Promise<void> {
     ]);
     const parsed = scrapeResultSchema.safeParse(raw);
     if (!parsed.success) throw new Error('a plataforma retornou dados em formato inesperado');
-    finish('ok', importScrape(db, userId, parsed.data, ctx.now()), null);
+    finish('ok', importScrape(db, userId, parsed.data, ctx.now(), { syncRunId: runId }), null);
   } catch (e) {
     const msg = (e instanceof Error ? e.message : String(e)).split(config.portalPassword).join('***');
     finish('error', null, `Não foi possível sincronizar: ${msg}`.slice(0, 300));

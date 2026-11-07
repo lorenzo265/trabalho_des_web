@@ -1,6 +1,7 @@
 import { lazy } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from '../components/layout/AppShell';
+import { CalendarPage } from '../pages/Calendar';
 import { DashboardPage } from '../pages/Dashboard';
 import { LessonsPage } from '../pages/Lessons';
 import { LoginPage } from '../pages/Login';
@@ -34,6 +35,7 @@ export function App() {
           <Route path="disciplinas" element={<SubjectsPage />} />
           <Route path="disciplinas/:id" element={<SubjectDetailPage />} />
           <Route path="aulas" element={<LessonsPage />} />
+          <Route path="calendario" element={<CalendarPage />} />
           <Route path="tutor/:threadId?" element={<TutorPage />} />
           <Route path="progresso" element={<ProgressPage />} />
           <Route path="perfil" element={<ProfilePage />} />

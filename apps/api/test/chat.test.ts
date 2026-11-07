@@ -117,7 +117,8 @@ describe('streaming SSE', () => {
     expect(last.system).toMatch(/Banco de Dados/);
     expect(last.system).toMatch(/preparação para concursos/);
     expect(last.system).toMatch(/português do Brasil/);
-    expect(last.context).toEqual({ firstName: 'Gustavo', subjectName: 'Banco de Dados', level: 'concurso' });
+    expect(last.context).toEqual({ firstName: 'Gustavo', subjectName: 'Banco de Dados', level: 'concurso', study: { openTopics: 0, nextDue: null } });
+    expect(last.system).not.toContain('<dados_do_aluno>'); // sem tópicos, aulas nem prazos: nada a contar
   });
 
   it('prompt de sistema sem disciplina diz que é conversa geral', () => {
