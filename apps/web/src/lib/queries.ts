@@ -5,8 +5,10 @@ import {
   appConfigSchema,
   assignmentSchema,
   authResponseSchema,
+  changesSchema,
   deviceSessionSchema,
   goalSchema,
+  gradeProjectionSchema,
   lessonSchema,
   listOf,
   pageOf,
@@ -29,6 +31,7 @@ import {
   type TopicPatch,
 } from '@edumind/contracts';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
 import { api, qs } from './api';
 
 /* ---------- Config ---------- */
@@ -48,6 +51,7 @@ export function useSubjectMutations() {
     void qc.invalidateQueries({ queryKey: ['subjects'] });
     void qc.invalidateQueries({ queryKey: ['subject'] });
     void qc.invalidateQueries({ queryKey: ['stats'] });
+    void qc.invalidateQueries({ queryKey: ['grades'] });
   };
   return {
     create: useMutation({
@@ -162,7 +166,57 @@ export function useStartSync() {
 
 /** Depois que um sync termina, recarrega o que ele pode ter alterado. */
 export function refreshAfterSync(qc: ReturnType<typeof useQueryClient>) {
-  for (const key of ['subjects', 'subject', 'lessons', 'assignments', 'stats']) void qc.invalidateQueries({ queryKey: [key] });
+  for (const key of ['subjects', 'subject', 'lessons', 'assignments', 'stats', 'changes', 'grades']) void qc.invalidateQueries({ queryKey: [key] });
+}
+
+/**
+ * Observa as sincronizações em QUALQUER tela (usar no AppShell, que fica sempre montado): quando uma nova execução
+ * termina, recarrega o que ela pode ter alterado. Sem isso, quem sai da tela Aulas durante a leitura ficava com
+ * painel, calendário, lembretes e selo de novidades desatualizados.
+ */
+export function useRefreshOnSyncFinish() {
+  const qc = useQueryClient();
+  const status = useSyncStatus();
+  // undefined = ainda não carregou; null = nunca houve sincronização; número = id da última execução
+  const lastId = status.data ? (status.data.last?.id ?? null) : undefined;
+  const seen = useRef<number | null | undefined>(undefined);
+  useEffect(() => {
+    if (lastId === undefined) return;
+    if (seen.current === undefined) {
+      seen.current = lastId; // 1ª leitura é a linha de base: não recarrega nada
+      return;
+    }
+    if (seen.current !== lastId) {
+      seen.current = lastId;
+      refreshAfterSync(qc);
+    }
+  }, [lastId, qc]);
+}
+
+/* ---------- Notas e projeção ---------- */
+export const useGrades = (subjectId: number) =>
+  useQuery({ queryKey: ['grades', subjectId], queryFn: () => api.get(`/subjects/${subjectId}/grades`, gradeProjectionSchema) });
+
+export function useSetAssignmentWeight() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, weight }: { id: number; weight: number }) => api.patch(`/assignments/${id}`, { weight }, assignmentSchema),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['grades'] });
+      void qc.invalidateQueries({ queryKey: ['assignments'] });
+    },
+  });
+}
+
+/* ---------- Novidades do sync ---------- */
+export const useChanges = () => useQuery({ queryKey: ['changes'], queryFn: () => api.get('/changes', changesSchema) });
+
+export function useMarkChangesSeen() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.post('/changes/seen'),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ['changes'] }),
+  });
 }
 
 /* ---------- Tutor ---------- */

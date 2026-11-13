@@ -5,7 +5,7 @@ import { dirname, resolve } from 'node:path';
 export type Db = Database.Database;
 
 /** Migrações em ordem: a posição (1, 2, …) é o `user_version` depois de aplicada. */
-const MIGRATIONS = ['schema.sql'];
+const MIGRATIONS = ['schema.sql', '002-change-events.sql', '003-grades.sql'];
 
 /** Aplica as migrações pendentes. Idempotente. */
 export function migrate(db: Db): void {

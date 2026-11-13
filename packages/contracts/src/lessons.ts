@@ -29,6 +29,8 @@ export const assignmentSchema = z.object({
   dueDate: dateOnly,
   status: assignmentStatusSchema,
   grade: z.number().nullable(),
+  /** Peso na média da disciplina (padrão 1); definido pelo aluno, o sync não altera. */
+  weight: z.number(),
 });
 export type Assignment = z.infer<typeof assignmentSchema>;
 
@@ -48,6 +50,8 @@ export const syncRunSchema = z.object({
       assignments: z.number().int(),
       created: z.number().int(),
       updated: z.number().int(),
+      /** Novidades detectadas nesta execução (0 na linha de base e em execuções antigas). */
+      changes: z.number().int().default(0),
     })
     .nullable(),
   error: z.string().nullable(),

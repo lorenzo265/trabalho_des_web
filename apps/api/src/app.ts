@@ -9,8 +9,11 @@ import { securityHeaders } from './middleware/security';
 import { createAccessService } from './modules/access/service';
 import { adminRoutes } from './modules/admin/routes';
 import { authRoutes } from './modules/auth/routes';
+import { calendarRoutes } from './modules/calendar/routes';
+import { changeRoutes } from './modules/changes/routes';
 import { chatRoutes } from './modules/chat/routes';
 import { goalRoutes } from './modules/goals/routes';
+import { gradeRoutes } from './modules/grades/routes';
 import { lessonRoutes } from './modules/lessons/routes';
 import { studyRoutes } from './modules/study/routes';
 import { subjectRoutes } from './modules/subjects/routes';
@@ -68,11 +71,14 @@ export function createApp(deps: AppDeps): Express {
     authRoutes(ctx),
     adminRoutes(ctx),
     subjectRoutes(ctx),
+    gradeRoutes(ctx),
     topicRoutes(ctx),
     goalRoutes(ctx),
     studyRoutes(ctx),
     chatRoutes(ctx),
     lessonRoutes(ctx),
+    changeRoutes(ctx),
+    calendarRoutes(ctx),
     syncRoutes(ctx),
   );
   app.use('/api', api);

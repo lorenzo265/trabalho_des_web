@@ -2,6 +2,7 @@ import type {
   AccessLogEntry,
   AdminUserRow,
   Assignment,
+  ChangeEvent,
   DeviceSession,
   Goal,
   Lesson,
@@ -15,6 +16,7 @@ import type {
 import type {
   AccessLogRow,
   AssignmentRow,
+  ChangeRow,
   GoalRow,
   LessonRow,
   MessageRow,
@@ -47,6 +49,7 @@ export const toSubject = (r: SubjectRow): Subject => ({
   createdAt: r.created_at,
   topicCount: r.topic_count,
   doneCount: r.done_count,
+  targetAverage: r.target_average,
 });
 
 export const toTopic = (r: TopicRow): Topic => ({
@@ -112,6 +115,20 @@ export const toAssignment = (r: AssignmentRow): Assignment => ({
   dueDate: r.due_date,
   status: r.status,
   grade: r.grade,
+  weight: r.weight,
+});
+
+export const toChange = (r: ChangeRow): ChangeEvent => ({
+  id: r.id,
+  kind: r.kind,
+  subjectId: r.subject_id,
+  subjectName: r.subject_name,
+  subjectColor: r.subject_color,
+  title: r.title,
+  oldValue: r.old_value,
+  newValue: r.new_value,
+  createdAt: r.created_at,
+  seen: r.seen_at !== null,
 });
 
 export const toAccessLog = (r: AccessLogRow): AccessLogEntry => ({

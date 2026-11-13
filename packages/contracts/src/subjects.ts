@@ -15,6 +15,8 @@ export const subjectSchema = z.object({
   createdAt: isoDateTime,
   topicCount: z.number().int(),
   doneCount: z.number().int(),
+  /** Média desejada na disciplina (0–10); base da projeção de notas. */
+  targetAverage: z.number(),
 });
 export type Subject = z.infer<typeof subjectSchema>;
 
@@ -31,6 +33,7 @@ export const subjectPatchSchema = z.object({
   professor: z.string().trim().max(LIMITS.professorMax).nullable().optional(),
   room: z.string().trim().max(LIMITS.roomMax).nullable().optional(),
   color: hexColor.optional(),
+  targetAverage: z.number().min(0, 'A média desejada vai de 0 a 10.').max(10, 'A média desejada vai de 0 a 10.').optional(),
 });
 export type SubjectPatch = z.input<typeof subjectPatchSchema>;
 

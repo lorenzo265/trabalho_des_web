@@ -14,7 +14,11 @@ import type { SourceAdapter } from './types';
  *        os helpers de `../normalize`.
  *  - Termos de uso (D10): somente leitura, conta do próprio aluno, limite de taxa.
  *
- * Para implementar: copie `mock-portal.ts`, troque URLs/seletores e registre em `../scrape.ts`.
+ * Para descobrir tudo isso: rode `npm run recon -- <url-do-portal>` (ver docs/recon/README.md). Ele grava
+ * HTML limpo das páginas + `relatorio.md` (plataforma provável, tipo de login, tabelas, rotas JSON).
+ *
+ * Para implementar: copie `mock-portal.ts`, troque URLs/seletores, use as páginas revisadas do recon como
+ * fixtures de teste e registre em `../scrape.ts`.
  */
 const NOT_IMPLEMENTED = () =>
   new ScrapeError(

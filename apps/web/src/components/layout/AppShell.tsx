@@ -2,6 +2,7 @@ import {
   Bot,
   BookOpen,
   CalendarDays,
+  CalendarRange,
   ChartColumn,
   GraduationCap,
   House,
@@ -12,7 +13,7 @@ import {
 import { Suspense, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth, useUser } from '../../app/auth';
-import { useConfig } from '../../lib/queries';
+import { useChanges, useConfig, useRefreshOnSyncFinish } from '../../lib/queries';
 import { initials } from '../../lib/color';
 import { storage } from '../../lib/storage';
 import { Spinner } from '../ui/bits';
@@ -42,8 +43,20 @@ export function Brand() {
   );
 }
 
+/** Selo com a quantidade de novidades não vistas (some quando é zero). */
+function NavBadge({ to }: { to: string }) {
+  const unseen = useChanges().data?.unseen ?? 0;
+  if (to !== '/aulas' || unseen === 0) return null;
+  return (
+    <span className="nav-badge" aria-label={`${unseen} novidades não vistas`}>
+      {unseen > 99 ? '99+' : unseen}
+    </span>
+  );
+}
+
 export function AppShell() {
   const user = useUser();
+  useRefreshOnSyncFinish();
   const { logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -62,8 +75,12 @@ export function AppShell() {
         {MAIN_NAV.slice(0, 4).map(({ to, label, icon: Icon, end }) => (
           <NavLink key={to} to={to} end={end} className="nav-link">
             <Icon size={20} /> {label}
+            <NavBadge to={to} />
           </NavLink>
         ))}
+        <NavLink to="/calendario" className="nav-link">
+          <CalendarRange size={20} /> Calendário
+        </NavLink>
         <NavLink to="/tutor" className="nav-link">
           <Bot size={20} /> Tutor IA
         </NavLink>
@@ -116,7 +133,10 @@ export function AppShell() {
       <nav className="bottomnav" aria-label="Navegação principal">
         {MAIN_NAV.map(({ to, label, icon: Icon, end }) => (
           <NavLink key={to} to={to} end={end} className={({ isActive }) => (isActive ? 'active' : '')}>
-            <Icon size={22} />
+            <span className="nav-icon">
+              <Icon size={22} />
+              <NavBadge to={to} />
+            </span>
             {label}
           </NavLink>
         ))}

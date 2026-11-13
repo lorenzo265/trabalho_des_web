@@ -1,6 +1,8 @@
-import { CalendarDays, ChevronLeft, ChevronRight, ClipboardList, RefreshCw } from 'lucide-react';
+import { CalendarDays, CalendarRange, ChevronLeft, ChevronRight, ClipboardList, RefreshCw } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import { ChangesCard } from '../components/ChangesCard';
 import { AssignmentRow, LessonRow } from '../components/items';
 import { Page } from '../components/layout/Page';
 import { Empty, ErrorState, SkeletonList, Spinner } from '../components/ui/bits';
@@ -25,7 +27,10 @@ function SyncCard() {
     if (startedId === null || !last || last.id !== startedId || last.status === 'running') return;
     setStartedId(null);
     refreshAfterSync(qc);
-    if (last.status === 'ok' && last.stats) toast.show(`Sincronizado: ${last.stats.lessons} aulas e ${last.stats.assignments} trabalhos.`);
+    if (last.status === 'ok' && last.stats) {
+      const n = last.stats.changes;
+      toast.show(`Sincronizado: ${last.stats.lessons} aulas e ${last.stats.assignments} trabalhos${n > 0 ? ` · ${n} ${n === 1 ? 'novidade' : 'novidades'}` : ''}.`);
+    }
     if (last.status === 'error') toast.show(last.error ?? 'A sincronização falhou.', 'error');
   }, [startedId, last, qc, toast]);
 
@@ -98,6 +103,7 @@ export function LessonsPage() {
   return (
     <Page title="Aulas" help={HELP.lessons}>
       <SyncCard />
+      <ChangesCard />
 
       <div className="grid-2">
         <section aria-labelledby="h-agenda">
@@ -106,6 +112,9 @@ export function LessonsPage() {
               Agenda · {formatDayMonthLong(weekStart)} – {formatDayMonthLong(weekEnd)}
             </h2>
             <div className="row" style={{ gap: 4 }}>
+              <Link to="/calendario" className="btn btn-outline btn-sm">
+                <CalendarRange size={16} /> Calendário
+              </Link>
               <button className="btn btn-outline btn-sm btn-icon" aria-label="Semana anterior" onClick={() => setWeekStart(addDays(weekStart, -7))}>
                 <ChevronLeft size={18} />
               </button>

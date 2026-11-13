@@ -4,6 +4,8 @@ import { BookOpen, CalendarDays, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useUser } from '../app/auth';
+import { ChangesNotice } from '../components/ChangesCard';
+import { RemindersCard } from '../components/RemindersCard';
 import { AssignmentRow, LessonRow, SubjectDot } from '../components/items';
 import { Page } from '../components/layout/Page';
 import { GoalFormModal } from '../components/GoalFormModal';
@@ -76,6 +78,9 @@ export function DashboardPage() {
       <p className="muted" style={{ marginTop: -8 }}>
         {capitalize(formatDateLong(today))}
       </p>
+
+      <ChangesNotice />
+      <RemindersCard assignments={assignments.data ?? []} userId={user.id} today={today} />
 
       <div className="grid-2">
         <div className="stack">

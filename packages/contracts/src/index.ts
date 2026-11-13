@@ -5,5 +5,7 @@ export * from './subjects';
 export * from './study';
 export * from './chat';
 export * from './lessons';
+export * from './grades';
+export * from './changes';
 export * from './scrape';
 export * from './admin';

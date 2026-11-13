@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { pathToFileURL } from 'node:url';
-import { buildFixtures } from './fixtures';
+import { applyDemoChanges, buildFixtures } from './fixtures';
 import { coursePage, coursesPage, loginPage, notFoundPage } from './views';
 
 export interface PortalOptions {
@@ -23,6 +23,9 @@ export function createPortalServer(options: PortalOptions = {}): Server {
   const password = options.password ?? process.env.PORTAL_PASSWORD ?? 'aluno123';
   const today = options.today ?? localToday;
   const sessions = new Set<string>();
+  // Gatilho de demonstração: quando ligado, o portal passa a mostrar mudanças (prazo, nota, aula remarcada…).
+  let demoChanged = false;
+  const currentCourses = () => (demoChanged ? applyDemoChanges(buildFixtures(today()), today()) : buildFixtures(today()));
 
   const send = (res: ServerResponse, status: number, html: string, headers: Record<string, string> = {}) => {
     res.writeHead(status, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', ...headers });
@@ -68,6 +71,13 @@ export function createPortalServer(options: PortalOptions = {}): Server {
         return send(res, 401, loginPage('Usuário ou senha inválidos'));
       }
 
+      // Só para a demonstração local (o portal mock nunca vai para produção): simula a faculdade mudando algo.
+      if (method === 'POST' && (path === '/__demo/mudancas' || path === '/__demo/reset')) {
+        demoChanged = path === '/__demo/mudancas';
+        res.writeHead(204).end();
+        return;
+      }
+
       if (path === '/sair' && method === 'GET') {
         const sid = sessionOf(req);
         if (sid) sessions.delete(sid);
@@ -76,7 +86,7 @@ export function createPortalServer(options: PortalOptions = {}): Server {
 
       if (method === 'GET' && (path === '/disciplinas' || path.startsWith('/disciplinas/'))) {
         if (!isLogged(req)) return redirect(res, '/login');
-        const courses = buildFixtures(today());
+        const courses = currentCourses();
         if (path === '/disciplinas') return send(res, 200, coursesPage(courses));
         const course = courses.find((c) => c.id === decodeURIComponent(path.slice('/disciplinas/'.length)));
         return course ? send(res, 200, coursePage(course)) : send(res, 404, notFoundPage());

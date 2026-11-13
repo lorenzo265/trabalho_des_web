@@ -29,3 +29,19 @@ export function daysBetween(from: string, to: string): string[] {
   for (let d = from; d <= to; d = addDays(d, 1)) out.push(d);
   return out;
 }
+
+/** Fuso padrão do app (briefing D7), usado quando o cliente não informa a data local. */
+export const APP_TIMEZONE = 'America/Sao_Paulo';
+
+/** Data de calendário (AAAA-MM-DD) de um instante num fuso IANA. */
+export function dateInZone(d: Date, timeZone: string = APP_TIMEZONE): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+}
+
+/** Dias de `from` até `to` (negativo se `to` for anterior). */
+export function diffDays(from: string, to: string): number {
+  return Math.round((parse(to).getTime() - parse(from).getTime()) / 86_400_000);
+}
+
+const WEEKDAYS_PT = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+export const weekdayName = (date: string): string => WEEKDAYS_PT[parse(date).getUTCDay()]!;

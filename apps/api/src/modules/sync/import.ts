@@ -1,5 +1,6 @@
 import { SUBJECT_COLORS, type ScrapeResult } from '@edumind/contracts';
 import { all, insert, one, run, type Db } from '../../db/db';
+import { recordChange, type ChangeInput } from '../changes/repo';
 import { subjectNameTaken } from '../subjects/repo';
 
 export interface ImportStats {
@@ -8,7 +9,21 @@ export interface ImportStats {
   assignments: number;
   created: number;
   updated: number;
+  /** Novidades registradas (0 na primeira sincronização com sucesso, que é só a linha de base). */
+  changes: number;
 }
+
+export interface ImportOptions {
+  /** Execução de sync que originou a importação (liga as novidades a ela). */
+  syncRunId?: number;
+  /** Força (ou nega) a linha de base; por padrão: não houve nenhum sync com sucesso antes. */
+  baseline?: boolean;
+}
+
+/** Quantas aulas novas de uma mesma disciplina viram um aviso só ("12 aulas novas"). */
+const LESSON_GROUP_THRESHOLD = 3;
+
+const lessonWhen = (date: string, start: string, end: string): string => `${date} ${start}–${end}`;
 
 interface SubjectLite {
   id: number;
@@ -23,10 +38,24 @@ interface SubjectLite {
  * rodar duas vezes com os mesmos dados não duplica nada e não conta mudanças.
  * Disciplina: por `external_id`; senão vincula pelo nome a uma existente; senão cria.
  */
-export function importScrape(db: Db, userId: number, result: ScrapeResult, nowIso: string): ImportStats {
-  const stats: ImportStats = { subjects: result.courses.length, lessons: 0, assignments: 0, created: 0, updated: 0 };
+export function importScrape(
+  db: Db,
+  userId: number,
+  result: ScrapeResult,
+  nowIso: string,
+  opts: ImportOptions = {},
+): ImportStats {
+  const stats: ImportStats = { subjects: result.courses.length, lessons: 0, assignments: 0, created: 0, updated: 0, changes: 0 };
 
   db.transaction(() => {
+    // Linha de base: sem sync anterior bem-sucedido, tudo é "novo" e não vale como novidade.
+    const baseline = opts.baseline ?? !one(db, "select 1 as x from sync_runs where user_id = ? and status = 'ok' limit 1", userId);
+    const changes: ChangeInput[] = [];
+    const newSubjectIds = new Set<number>(); // disciplina nova: o aviso é um só, não um por aula/trabalho
+    const note = (c: ChangeInput) => {
+      if (!baseline) changes.push(c);
+    };
+
     // Dados de demonstração do seed (external_id "seed:*") dão lugar aos dados reais da fonte.
     if (result.courses.length) {
       run(db, "delete from lessons where user_id = ? and external_id like 'seed:%'", userId);
@@ -77,9 +106,14 @@ export function importScrape(db: Db, userId: number, result: ScrapeResult, nowIs
           );
           subject = { id, name, professor: course.professor, room: course.room, external_id: course.externalId };
           stats.created++;
+          newSubjectIds.add(id);
+          note({ subjectId: id, kind: 'subject_new', title: name });
         }
       }
       const subjectId = subject.id;
+      const subjectName = subject.name;
+      const isNewSubject = newSubjectIds.has(subjectId);
+      const newLessons: ChangeInput[] = [];
 
       for (const l of course.lessons) {
         stats.lessons++;
@@ -94,6 +128,9 @@ export function importScrape(db: Db, userId: number, result: ScrapeResult, nowIs
             userId, subjectId, l.externalId, l.date, l.start, l.end, l.topic, l.room, nowIso,
           );
           stats.created++;
+          if (!isNewSubject) {
+            newLessons.push({ subjectId, kind: 'lesson_new', title: l.topic ?? subjectName, newValue: lessonWhen(l.date, l.start, l.end) });
+          }
         } else if (
           cur.subject_id !== subjectId || cur.date !== l.date || cur.start_time !== l.start ||
           cur.end_time !== l.end || cur.topic !== l.topic || cur.room !== l.room
@@ -105,7 +142,22 @@ export function importScrape(db: Db, userId: number, result: ScrapeResult, nowIs
             subjectId, l.date, l.start, l.end, l.topic, l.room, nowIso, cur.id,
           );
           stats.updated++;
+          const title = l.topic ?? cur.topic ?? subjectName;
+          if (cur.date !== l.date || cur.start_time !== l.start || cur.end_time !== l.end) {
+            note({
+              subjectId, kind: 'lesson_rescheduled', title,
+              oldValue: lessonWhen(cur.date, cur.start_time, cur.end_time), newValue: lessonWhen(l.date, l.start, l.end),
+            });
+          } else if (cur.room !== l.room) {
+            note({ subjectId, kind: 'lesson_room_changed', title, oldValue: cur.room ?? '—', newValue: l.room ?? '—' });
+          }
+          // Mudança só do tópico (o professor preenche depois) não é novidade.
         }
+      }
+      if (newLessons.length > LESSON_GROUP_THRESHOLD) {
+        note({ subjectId, kind: 'lessons_added', title: subjectName, newValue: String(newLessons.length) });
+      } else {
+        newLessons.forEach(note);
       }
 
       for (const a of course.assignments) {
@@ -121,6 +173,7 @@ export function importScrape(db: Db, userId: number, result: ScrapeResult, nowIs
             userId, subjectId, a.externalId, a.title, a.description, a.dueDate, a.status, a.grade, nowIso,
           );
           stats.created++;
+          if (!isNewSubject) note({ subjectId, kind: 'assignment_new', title: a.title, newValue: a.dueDate });
         } else if (
           cur.subject_id !== subjectId || cur.title !== a.title || cur.description !== a.description ||
           cur.due_date !== a.dueDate || cur.status !== a.status || cur.grade !== a.grade
@@ -132,9 +185,25 @@ export function importScrape(db: Db, userId: number, result: ScrapeResult, nowIs
             subjectId, a.title, a.description, a.dueDate, a.status, a.grade, nowIso, cur.id,
           );
           stats.updated++;
+          if (cur.due_date !== a.dueDate) {
+            note({ subjectId, kind: 'assignment_due_changed', title: a.title, oldValue: cur.due_date, newValue: a.dueDate });
+          }
+          const gradePosted = cur.grade === null && a.grade !== null;
+          if (gradePosted) {
+            note({ subjectId, kind: 'grade_posted', title: a.title, newValue: String(a.grade) });
+          } else if (cur.grade !== null && a.grade !== null && cur.grade !== a.grade) {
+            note({ subjectId, kind: 'grade_changed', title: a.title, oldValue: String(cur.grade), newValue: String(a.grade) });
+          }
+          // "corrigido" junto com a nota já é contado em "nota lançada".
+          if (cur.status !== a.status && !(gradePosted && a.status === 'corrigido')) {
+            note({ subjectId, kind: 'assignment_status_changed', title: a.title, oldValue: cur.status, newValue: a.status });
+          }
         }
       }
     }
+
+    for (const c of changes) recordChange(db, userId, opts.syncRunId ?? null, nowIso, c);
+    stats.changes = changes.length;
   })();
 
   return stats;

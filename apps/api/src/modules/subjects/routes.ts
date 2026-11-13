@@ -50,11 +50,12 @@ export function subjectRoutes(ctx: Ctx): Router {
       v === undefined ? keep : v === null || v === '' ? null : v;
     run(
       db,
-      'update subjects set name = ?, professor = ?, room = ?, color = ? where id = ?',
+      'update subjects set name = ?, professor = ?, room = ?, color = ?, target_average = ? where id = ?',
       patch.name ?? current.name,
       text(patch.professor, current.professor),
       text(patch.room, current.room),
       patch.color ?? current.color,
+      patch.targetAverage ?? current.target_average,
       current.id,
     );
     res.json(toSubject(requireSubject(db, userId, current.id)));
